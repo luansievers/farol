@@ -29,7 +29,11 @@
     "detail": "tsx src/modules/crawler/run-details.ts all",
     "detail:batch": "tsx src/modules/crawler/run-details.ts batch",
     "detail:stats": "tsx src/modules/crawler/run-details.ts stats",
-    "detail:reset": "tsx src/modules/crawler/run-details.ts reset"
+    "detail:reset": "tsx src/modules/crawler/run-details.ts reset",
+    "parser": "tsx src/modules/parser/run.ts all",
+    "parser:batch": "tsx src/modules/parser/run.ts batch",
+    "parser:stats": "tsx src/modules/parser/run.ts stats",
+    "parser:reset": "tsx src/modules/parser/run.ts reset"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -45,6 +49,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.1.0",
+    "@types/pdf-parse": "^1.1.5",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
@@ -60,6 +65,8 @@
     "@aws-sdk/s3-request-presigner": "^3.980.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "pdf-parse": "^2.4.5",
+    "tesseract.js": "^7.0.0"
   }
 }
