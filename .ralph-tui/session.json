@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T22:06:16.085Z",
-  "currentIteration": 13,
+  "updatedAt": "2026-01-31T22:13:17.701Z",
+  "currentIteration": 14,
   "maxIterations": 10,
-  "tasksCompleted": 13,
+  "tasksCompleted": 14,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -95,8 +95,8 @@
       {
         "id": "US-014",
         "title": "Consolidação do score de anomalia",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-015",
@@ -302,6 +302,16 @@
       "durationMs": 237530,
       "startedAt": "2026-01-31T21:57:36.177Z",
       "endedAt": "2026-01-31T22:01:33.707Z"
+    },
+    {
+      "iteration": 14,
+      "status": "completed",
+      "taskId": "US-014",
+      "taskTitle": "Consolidação do score de anomalia",
+      "taskCompleted": true,
+      "durationMs": 281293,
+      "startedAt": "2026-01-31T22:01:34.789Z",
+      "endedAt": "2026-01-31T22:06:16.082Z"
     }
   ],
   "skippedTaskIds": [],
