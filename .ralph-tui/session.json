@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T22:22:58.820Z",
-  "currentIteration": 16,
+  "updatedAt": "2026-01-31T22:30:03.005Z",
+  "currentIteration": 17,
   "maxIterations": 10,
-  "tasksCompleted": 16,
+  "tasksCompleted": 17,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -113,8 +113,8 @@
       {
         "id": "US-017",
         "title": "API REST - Endpoints de fornecedores e órgãos",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-018",
@@ -332,6 +332,16 @@
       "durationMs": 247907,
       "startedAt": "2026-01-31T22:13:18.778Z",
       "endedAt": "2026-01-31T22:17:26.685Z"
+    },
+    {
+      "iteration": 17,
+      "status": "completed",
+      "taskId": "US-017",
+      "taskTitle": "API REST - Endpoints de fornecedores e órgãos",
+      "taskCompleted": true,
+      "durationMs": 331052,
+      "startedAt": "2026-01-31T22:17:27.765Z",
+      "endedAt": "2026-01-31T22:22:58.817Z"
     }
   ],
   "skippedTaskIds": [],
