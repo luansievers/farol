@@ -33,7 +33,12 @@
     "parser": "tsx src/modules/parser/run.ts all",
     "parser:batch": "tsx src/modules/parser/run.ts batch",
     "parser:stats": "tsx src/modules/parser/run.ts stats",
-    "parser:reset": "tsx src/modules/parser/run.ts reset"
+    "parser:reset": "tsx src/modules/parser/run.ts reset",
+    "summary": "tsx src/modules/summary/run.ts all",
+    "summary:batch": "tsx src/modules/summary/run.ts batch",
+    "summary:stats": "tsx src/modules/summary/run.ts stats",
+    "summary:reset": "tsx src/modules/summary/run.ts reset",
+    "summary:regen": "tsx src/modules/summary/run.ts regen"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
