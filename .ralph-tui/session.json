@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
+  "status": "running",
+  "startedAt": "2026-01-31T20:50:31.666Z",
+  "updatedAt": "2026-01-31T20:50:31.666Z",
+  "currentIteration": 0,
+  "maxIterations": 10,
+  "tasksCompleted": 0,
+  "isPaused": false,
+  "agentPlugin": "claude",
+  "trackerState": {
+    "plugin": "json",
+    "prdPath": "./tasks/prd.json",
+    "totalTasks": 26,
+    "tasks": [
+      {
+        "id": "US-001",
+        "title": "Setup do projeto e estrutura base",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-002",
+        "title": "Configuração do banco de dados PostgreSQL",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-003",
+        "title": "Configuração de cloud storage para documentos",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-004",
+        "title": "Crawler do Portal de Transparência SP - Listagem",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-005",
+        "title": "Crawler do Portal de Transparência SP - Detalhes e PDFs",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-006",
+        "title": "Parser de PDFs de contratos",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-007",
+        "title": "Módulo de AI configurável",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-008",
+        "title": "Geração de resumo do contrato por AI",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-009",
+        "title": "Classificação automática de contratos",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-010",
+        "title": "Cálculo do score de anomalia - Valor",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-011",
+        "title": "Cálculo do score de anomalia - Aditivos",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-012",
+        "title": "Cálculo do score de anomalia - Concentração de fornecedor",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-013",
+        "title": "Cálculo do score de anomalia - Prazo atípico",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-014",
+        "title": "Consolidação do score de anomalia",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-015",
+        "title": "API REST - Endpoints de contratos",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-016",
+        "title": "API REST - Endpoints de comparação",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-017",
+        "title": "API REST - Endpoints de fornecedores e órgãos",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-018",
+        "title": "Interface Web - Setup e estrutura",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-019",
+        "title": "Interface Web - Lista de contratos",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-020",
+        "title": "Interface Web - Detalhes do contrato",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-021",
+        "title": "Interface Web - Comparação de contratos",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-022",
+        "title": "Interface Web - Página de fornecedor",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-023",
+        "title": "Interface Web - Página de órgão",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-024",
+        "title": "Interface Web - Busca global",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-025",
+        "title": "Job de atualização automática",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-026",
+        "title": "Documentação da API",
+        "status": "open",
+        "completedInSession": false
+      }
+    ]
+  },
+  "iterations": [],
+  "skippedTaskIds": [],
+  "cwd": "/Users/luansievers/Documents/dev/farol",
+  "activeTaskIds": [],
+  "subagentPanelVisible": false
+}
