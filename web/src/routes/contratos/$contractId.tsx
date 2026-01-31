@@ -205,7 +205,13 @@ function ContractDetailPage() {
               <h3 className="text-sm font-medium text-muted-foreground mb-2">
                 Fornecedor
               </h3>
-              <p className="font-medium">{contract.supplier.tradeName}</p>
+              <Link
+                to="/fornecedores/$supplierId"
+                params={{ supplierId: contract.supplier.id }}
+                className="hover:underline"
+              >
+                <p className="font-medium">{contract.supplier.tradeName}</p>
+              </Link>
               <p className="text-sm text-muted-foreground">
                 {contract.supplier.legalName}
               </p>

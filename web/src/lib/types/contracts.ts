@@ -187,3 +187,48 @@ export interface ContractListParams extends ContractFilters {
   sortBy?: ContractSortField;
   order?: SortOrder;
 }
+
+// Supplier DTOs
+export interface SupplierMetricsDto {
+  totalContracts: number;
+  totalValue: number;
+  averageScore: number | null;
+}
+
+export interface SupplierContractDto {
+  id: string;
+  externalId: string;
+  number: string;
+  object: string;
+  value: number;
+  category: ContractCategory;
+  status: ContractStatus;
+  signatureDate: string | null;
+  agency: AgencyDto;
+  anomalyScore: AnomalyScoreDto | null;
+}
+
+export interface SupplierDetailDto {
+  id: string;
+  cnpj: string;
+  tradeName: string;
+  legalName: string;
+  metrics: SupplierMetricsDto;
+  contracts: SupplierContractDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Computed metrics for supplier page
+export interface AgencyConcentration {
+  agency: AgencyDto;
+  contractCount: number;
+  totalValue: number;
+  percentage: number;
+}
+
+export interface YearlyContractData {
+  year: number;
+  contractCount: number;
+  totalValue: number;
+}
