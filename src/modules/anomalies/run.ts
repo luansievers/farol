@@ -122,19 +122,135 @@ async function main() {
       break;
     }
 
+    // Amendment score commands (US-011)
+    case "amendment": {
+      const subCommand = arg1 ?? "all";
+
+      switch (subCommand) {
+        case "all": {
+          console.log("Processing all contracts for amendment score...\n");
+          const result = await service.processAllAmendments();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "batch": {
+          console.log("Processing batch of contracts for amendment score...\n");
+          const result = await service.processAmendmentBatch();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "reset": {
+          console.log("Resetting amendment scores...\n");
+          const count = await service.resetAmendmentScores();
+          console.log(`Reset amendment scores for ${String(count)} contracts`);
+          break;
+        }
+
+        default: {
+          // Treat as contract ID for single calculation
+          console.log(
+            `Calculating amendment score for contract ${subCommand}...\n`
+          );
+          const result = await service.calculateAmendmentScore(subCommand);
+          if (result.success) {
+            console.log(`Score: ${String(result.data.score)}/25`);
+            console.log(`Is Anomaly: ${String(result.data.isAnomaly)}`);
+            console.log(`Reason: ${result.data.reason}`);
+            if (result.data.stats) {
+              console.log("\nStatistics:");
+              console.log(`  Category: ${result.data.stats.category}`);
+              console.log(
+                `  Category Mean Amendments: ${result.data.stats.mean.toFixed(1)}`
+              );
+              console.log(
+                `  Category Std Dev: ${result.data.stats.standardDeviation.toFixed(1)}`
+              );
+              console.log(
+                `  Contracts in Category: ${String(result.data.stats.contractCount)}`
+              );
+              console.log(
+                `  This Contract Amendments: ${String(result.data.stats.amendmentCount)}`
+              );
+              console.log(
+                `  Total Amendment Value: R$ ${result.data.stats.totalAmendmentValue.toFixed(2)}`
+              );
+              console.log(
+                `  Original Contract Value: R$ ${result.data.stats.originalContractValue.toFixed(2)}`
+              );
+              console.log(
+                `  Value Change Ratio: ${(result.data.stats.valueIncreaseRatio * 100).toFixed(1)}%`
+              );
+              console.log(
+                `  Deviations from Mean: ${result.data.stats.deviationsFromMean.toFixed(2)}`
+              );
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+        }
+      }
+      break;
+    }
+
+    case "amendment:recalculate": {
+      if (!arg1) {
+        console.error("Error: Contract ID required");
+        console.log("Usage: pnpm anomaly amendment:recalculate <contractId>");
+        process.exit(1);
+      }
+      console.log(`Recalculating amendment score for contract ${arg1}...\n`);
+      const result = await service.recalculateAmendmentScore(arg1);
+      if (result.success) {
+        console.log(
+          `Amendment Score: ${String(result.data.amendmentScore)}/25`
+        );
+        console.log(`Reason: ${result.data.amendmentReason}`);
+      } else {
+        console.error("Error:", result.error.message);
+        process.exit(1);
+      }
+      break;
+    }
+
     default:
       console.log("Anomaly Score Commands:");
-      console.log("  all          - Process all pending contracts");
-      console.log("  batch        - Process a batch of contracts");
-      console.log("  stats        - Show anomaly score statistics");
+      console.log("\nValue Score (US-010):");
       console.log(
-        "  reset        - Reset value scores (or 'reset all' for all scores)"
+        "  all              - Process all pending contracts for value score"
       );
       console.log(
-        "  recalculate  - Recalculate and save value score for a contract"
+        "  batch            - Process a batch of contracts for value score"
+      );
+      console.log("  stats            - Show anomaly score statistics");
+      console.log(
+        "  reset            - Reset value scores (or 'reset all' for all scores)"
       );
       console.log(
-        "  single       - Calculate value score for a contract (no save)"
+        "  recalculate <id> - Recalculate and save value score for a contract"
+      );
+      console.log(
+        "  single <id>      - Calculate value score for a contract (no save)"
+      );
+      console.log("\nAmendment Score (US-011):");
+      console.log(
+        "  amendment all    - Process all contracts for amendment score"
+      );
+      console.log("  amendment batch  - Process a batch for amendment score");
+      console.log("  amendment reset  - Reset amendment scores");
+      console.log(
+        "  amendment <id>   - Calculate amendment score for a contract (no save)"
+      );
+      console.log(
+        "  amendment:recalculate <id> - Recalculate and save amendment score"
       );
   }
 }

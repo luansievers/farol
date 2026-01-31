@@ -51,6 +51,36 @@ export interface AnomalyScoreResult {
   valueReason: string;
 }
 
+// Amendment score calculation result
+export interface AmendmentScoreResult {
+  score: number; // 0-25
+  reason: string;
+  isAnomaly: boolean;
+  stats: AmendmentStats | null;
+}
+
+// Statistics for amendments in same category
+export interface AmendmentStats {
+  category: string;
+  mean: number;
+  standardDeviation: number;
+  contractCount: number;
+  amendmentCount: number;
+  totalAmendmentValue: number;
+  originalContractValue: number;
+  valueIncreaseRatio: number; // total amendment value / original value
+  deviationsFromMean: number;
+}
+
+// Full anomaly score result with amendment
+export interface FullAnomalyScoreResult {
+  contractId: string;
+  valueScore: number;
+  valueReason: string;
+  amendmentScore: number;
+  amendmentReason: string;
+}
+
 // Service stats
 export interface AnomalyStats {
   startedAt: Date;
