@@ -15,6 +15,12 @@ export function Header() {
               to="/"
               className="text-foreground/60 transition-colors hover:text-foreground/80 [&.active]:text-foreground"
             >
+              Dashboard
+            </Link>
+            <Link
+              to="/contratos"
+              className="text-foreground/60 transition-colors hover:text-foreground/80 [&.active]:text-foreground"
+            >
               Contratos
             </Link>
           </nav>
