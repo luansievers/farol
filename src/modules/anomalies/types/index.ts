@@ -114,6 +114,39 @@ export interface FullAnomalyScoreWithConcentration {
   concentrationReason: string;
 }
 
+// Duration score calculation result (US-013)
+export interface DurationScoreResult {
+  score: number; // 0-25
+  reason: string;
+  isAnomaly: boolean;
+  stats: DurationStats | null;
+}
+
+// Statistics for contract duration in same category
+export interface DurationStats {
+  category: string;
+  mean: number; // Mean duration in days
+  standardDeviation: number;
+  contractCount: number;
+  contractDuration: number; // This contract's duration in days
+  deviationsFromMean: number;
+  isTooShort: boolean; // Below average
+  isTooLong: boolean; // Above average
+}
+
+// Full anomaly score result with all scores including duration
+export interface FullAnomalyScoreWithDuration {
+  contractId: string;
+  valueScore: number;
+  valueReason: string;
+  amendmentScore: number;
+  amendmentReason: string;
+  concentrationScore: number;
+  concentrationReason: string;
+  durationScore: number;
+  durationReason: string;
+}
+
 // Service stats
 export interface AnomalyStats {
   startedAt: Date;

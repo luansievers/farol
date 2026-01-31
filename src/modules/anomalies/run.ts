@@ -323,6 +323,98 @@ async function main() {
       break;
     }
 
+    // Duration score commands (US-013)
+    case "duration": {
+      const subCommand = arg1 ?? "all";
+
+      switch (subCommand) {
+        case "all": {
+          console.log("Processing all contracts for duration score...\n");
+          const result = await service.processAllDurations();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "batch": {
+          console.log("Processing batch of contracts for duration score...\n");
+          const result = await service.processDurationBatch();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "reset": {
+          console.log("Resetting duration scores...\n");
+          const count = await service.resetDurationScores();
+          console.log(`Reset duration scores for ${String(count)} contracts`);
+          break;
+        }
+
+        default: {
+          // Treat as contract ID for single calculation
+          console.log(
+            `Calculating duration score for contract ${subCommand}...\n`
+          );
+          const result = await service.calculateDurationScore(subCommand);
+          if (result.success) {
+            console.log(`Score: ${String(result.data.score)}/25`);
+            console.log(`Is Anomaly: ${String(result.data.isAnomaly)}`);
+            console.log(`Reason: ${result.data.reason}`);
+            if (result.data.stats) {
+              console.log("\nStatistics:");
+              console.log(`  Category: ${result.data.stats.category}`);
+              console.log(
+                `  Category Mean Duration: ${result.data.stats.mean.toFixed(1)} days`
+              );
+              console.log(
+                `  Category Std Dev: ${result.data.stats.standardDeviation.toFixed(1)} days`
+              );
+              console.log(
+                `  Contracts in Category: ${String(result.data.stats.contractCount)}`
+              );
+              console.log(
+                `  This Contract Duration: ${String(result.data.stats.contractDuration)} days`
+              );
+              console.log(
+                `  Deviations from Mean: ${result.data.stats.deviationsFromMean.toFixed(2)}`
+              );
+              console.log(
+                `  Too Short: ${String(result.data.stats.isTooShort)}`
+              );
+              console.log(`  Too Long: ${String(result.data.stats.isTooLong)}`);
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+        }
+      }
+      break;
+    }
+
+    case "duration:recalculate": {
+      if (!arg1) {
+        console.error("Error: Contract ID required");
+        console.log("Usage: pnpm anomaly duration:recalculate <contractId>");
+        process.exit(1);
+      }
+      console.log(`Recalculating duration score for contract ${arg1}...\n`);
+      const result = await service.recalculateDurationScore(arg1);
+      if (result.success) {
+        console.log(`Duration Score: ${String(result.data.durationScore)}/25`);
+        console.log(`Reason: ${result.data.durationReason}`);
+      } else {
+        console.error("Error:", result.error.message);
+        process.exit(1);
+      }
+      break;
+    }
+
     default:
       console.log("Anomaly Score Commands:");
       console.log("\nValue Score (US-010):");
@@ -367,6 +459,20 @@ async function main() {
       );
       console.log(
         "  concentration:recalculate <id> - Recalculate and save concentration score"
+      );
+      console.log("\nDuration Score (US-013):");
+      console.log(
+        "  duration all         - Process all contracts for duration score"
+      );
+      console.log(
+        "  duration batch       - Process a batch for duration score"
+      );
+      console.log("  duration reset       - Reset duration scores");
+      console.log(
+        "  duration <id>        - Calculate duration score (no save)"
+      );
+      console.log(
+        "  duration:recalculate <id> - Recalculate and save duration score"
       );
   }
 }

@@ -21,6 +21,9 @@ import type {
   ConcentrationScoreResult,
   ConcentrationStats,
   FullAnomalyScoreWithConcentration,
+  DurationScoreResult,
+  DurationStats,
+  FullAnomalyScoreWithDuration,
 } from "./types/index.js";
 
 const DEFAULT_CONFIG: AnomalyConfig = {
@@ -1616,6 +1619,543 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     return calculateConcentrationScoreAndSave(contractId);
   }
 
+  // ============================================
+  // DURATION SCORE (US-013)
+  // ============================================
+
+  /**
+   * Threshold for duration anomaly: > 1.5 standard deviations from mean
+   */
+  const DURATION_STD_DEV_THRESHOLD = 1.5;
+
+  /**
+   * Gets a contract with dates for duration calculation
+   */
+  async function getContractForDuration(contractId: string) {
+    return prisma.contract.findUnique({
+      where: { id: contractId },
+      select: {
+        id: true,
+        externalId: true,
+        category: true,
+        startDate: true,
+        endDate: true,
+        signatureDate: true,
+        anomalyScore: true,
+      },
+    });
+  }
+
+  /**
+   * Gets contracts that need duration score calculation
+   * Contracts that have an anomaly score but durationScore = 0 and no reason
+   */
+  async function getContractsForDurationScore(limit: number) {
+    return prisma.contract.findMany({
+      where: {
+        anomalyScore: {
+          durationScore: 0,
+          durationReason: null,
+        },
+        category: {
+          not: "OUTROS",
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      take: limit,
+      select: {
+        id: true,
+        externalId: true,
+        category: true,
+        startDate: true,
+        endDate: true,
+        signatureDate: true,
+      },
+    });
+  }
+
+  /**
+   * Calculates contract duration in days
+   * Uses startDate and endDate, falling back to signatureDate if needed
+   */
+  function calculateContractDuration(contract: {
+    startDate: Date | null;
+    endDate: Date | null;
+    signatureDate: Date | null;
+  }): number | null {
+    const start = contract.startDate ?? contract.signatureDate;
+    const end = contract.endDate;
+
+    if (!start || !end) {
+      return null;
+    }
+
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays > 0 ? diffDays : null;
+  }
+
+  /**
+   * Calculates duration statistics for a category
+   * Returns mean and standard deviation of contract durations
+   */
+  async function getDurationCategoryStats(category: ContractCategory): Promise<{
+    mean: number;
+    standardDeviation: number;
+    count: number;
+  } | null> {
+    // Get all contracts in the category with dates
+    const contracts = await prisma.contract.findMany({
+      where: {
+        category,
+        OR: [{ startDate: { not: null } }, { signatureDate: { not: null } }],
+        endDate: { not: null },
+      },
+      select: {
+        startDate: true,
+        endDate: true,
+        signatureDate: true,
+      },
+    });
+
+    // Calculate durations for contracts with valid dates
+    const durations: number[] = [];
+    for (const contract of contracts) {
+      const duration = calculateContractDuration(contract);
+      if (duration !== null && duration > 0) {
+        durations.push(duration);
+      }
+    }
+
+    if (durations.length < finalConfig.minContractsForStats) {
+      return null;
+    }
+
+    // Calculate mean
+    const sum = durations.reduce((acc, val) => acc + val, 0);
+    const mean = sum / durations.length;
+
+    // Calculate standard deviation
+    const squaredDiffs = durations.map((val) => Math.pow(val - mean, 2));
+    const avgSquaredDiff =
+      squaredDiffs.reduce((acc, val) => acc + val, 0) / durations.length;
+    const standardDeviation = Math.sqrt(avgSquaredDiff);
+
+    return {
+      mean,
+      standardDeviation,
+      count: durations.length,
+    };
+  }
+
+  /**
+   * Calculates the duration score for a contract
+   * Score is 0-25 based on how atypical the duration is
+   * Flags contracts with duration > mean ± 1.5 std deviations
+   */
+  async function calculateDurationScore(
+    contractId: string
+  ): Promise<Result<DurationScoreResult, AnomalyError>> {
+    const contract = await getContractForDuration(contractId);
+
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    if (contract.category === "OUTROS") {
+      return {
+        success: false,
+        error: {
+          code: "NO_CATEGORY",
+          message: "Contract must have a specific category (not OUTROS)",
+        },
+      };
+    }
+
+    // Calculate this contract's duration
+    const contractDuration = calculateContractDuration(contract);
+
+    if (contractDuration === null) {
+      return {
+        success: true,
+        data: {
+          score: 0,
+          reason: "Missing start or end date for duration calculation",
+          isAnomaly: false,
+          stats: null,
+        },
+      };
+    }
+
+    // Get category stats
+    const categoryStats = await getDurationCategoryStats(contract.category);
+
+    if (!categoryStats) {
+      return {
+        success: true,
+        data: {
+          score: 0,
+          reason: `Insufficient contracts in category ${contract.category} for statistical analysis`,
+          isAnomaly: false,
+          stats: null,
+        },
+      };
+    }
+
+    // Calculate how many standard deviations from mean
+    const deviationsFromMean =
+      categoryStats.standardDeviation > 0
+        ? (contractDuration - categoryStats.mean) /
+          categoryStats.standardDeviation
+        : 0;
+
+    // Check if duration is anomalous (too short or too long)
+    const isTooShort = deviationsFromMean < -DURATION_STD_DEV_THRESHOLD;
+    const isTooLong = deviationsFromMean > DURATION_STD_DEV_THRESHOLD;
+    const isAnomaly = isTooShort || isTooLong;
+
+    // Build stats object
+    const stats: DurationStats = {
+      category: contract.category,
+      mean: categoryStats.mean,
+      standardDeviation: categoryStats.standardDeviation,
+      contractCount: categoryStats.count,
+      contractDuration,
+      deviationsFromMean,
+      isTooShort,
+      isTooLong,
+    };
+
+    // Calculate score (0-25)
+    let score = 0;
+    if (isAnomaly) {
+      // Use absolute deviation for scoring
+      const absDeviations = Math.abs(deviationsFromMean);
+      const excessDeviations = absDeviations - DURATION_STD_DEV_THRESHOLD;
+      // Map to score: 1.5 std devs = 5, scales up to 25
+      score = Math.min(
+        finalConfig.maxScore,
+        Math.round(5 + excessDeviations * 10)
+      );
+    }
+
+    // Build reason string
+    let reason: string;
+    const meanDays = Math.round(categoryStats.mean);
+
+    if (isAnomaly) {
+      if (isTooShort) {
+        reason = `Duration of ${String(contractDuration)} days for ${contract.category}, average is ${String(meanDays)} days (${Math.abs(deviationsFromMean).toFixed(1)} std deviations below)`;
+      } else {
+        reason = `Duration of ${String(contractDuration)} days for ${contract.category}, average is ${String(meanDays)} days (${deviationsFromMean.toFixed(1)} std deviations above)`;
+      }
+    } else if (Math.abs(deviationsFromMean) > 1) {
+      reason = `Duration above/below average but within normal range (${Math.abs(deviationsFromMean).toFixed(1)} std deviations)`;
+    } else {
+      reason = `Duration within normal range for ${contract.category} contracts (${String(contractDuration)} days, avg: ${String(meanDays)} days)`;
+    }
+
+    return {
+      success: true,
+      data: {
+        score,
+        reason,
+        isAnomaly,
+        stats,
+      },
+    };
+  }
+
+  /**
+   * Calculates duration score and saves to database
+   */
+  async function calculateDurationScoreAndSave(
+    contractId: string
+  ): Promise<Result<FullAnomalyScoreWithDuration, AnomalyError>> {
+    const result = await calculateDurationScore(contractId);
+
+    if (!result.success) {
+      return result;
+    }
+
+    const contract = await getContractForDuration(contractId);
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    if (!contract.anomalyScore) {
+      return {
+        success: false,
+        error: {
+          code: "CALCULATION_FAILED",
+          message: `Contract ${contractId} has no anomaly score record. Run value score calculation first.`,
+        },
+      };
+    }
+
+    try {
+      // Update anomaly score with duration data
+      const currentValueScore = contract.anomalyScore.valueScore;
+      const currentAmendmentScore = contract.anomalyScore.amendmentScore;
+      const currentConcentrationScore =
+        contract.anomalyScore.concentrationScore;
+      const newTotalScore =
+        currentValueScore +
+        currentAmendmentScore +
+        currentConcentrationScore +
+        result.data.score;
+      const newCategory =
+        newTotalScore > 50 ? "HIGH" : newTotalScore > 25 ? "MEDIUM" : "LOW";
+
+      await prisma.anomalyScore.update({
+        where: { contractId },
+        data: {
+          durationScore: result.data.score,
+          durationReason: result.data.reason,
+          totalScore: newTotalScore,
+          category: newCategory,
+        },
+      });
+
+      console.log(
+        `[Anomaly] ${contract.externalId}: Duration score ${String(result.data.score)}/25 - ${result.data.reason}`
+      );
+
+      return {
+        success: true,
+        data: {
+          contractId,
+          valueScore: currentValueScore,
+          valueReason: contract.anomalyScore.valueReason ?? "",
+          amendmentScore: currentAmendmentScore,
+          amendmentReason: contract.anomalyScore.amendmentReason ?? "",
+          concentrationScore: currentConcentrationScore,
+          concentrationReason: contract.anomalyScore.concentrationReason ?? "",
+          durationScore: result.data.score,
+          durationReason: result.data.reason,
+        },
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          code: "DATABASE_ERROR",
+          message: err instanceof Error ? err.message : "Database error",
+          details: err,
+        },
+      };
+    }
+  }
+
+  /**
+   * Process a batch of contracts for duration score
+   */
+  async function processDurationBatch(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log(
+      `[Anomaly] Starting duration score batch (batch size: ${String(finalConfig.batchSize)})`
+    );
+
+    const contracts = await getContractsForDurationScore(finalConfig.batchSize);
+
+    if (contracts.length === 0) {
+      console.log("[Anomaly] No contracts pending duration score calculation");
+      stats.finishedAt = new Date();
+      return { success: true, data: stats };
+    }
+
+    console.log(
+      `[Anomaly] Found ${String(contracts.length)} contracts to process for duration score`
+    );
+
+    for (const contract of contracts) {
+      const result = await calculateDurationScoreAndSave(contract.id);
+      stats.processed++;
+
+      if (result.success) {
+        stats.calculated++;
+        if (result.data.durationScore > 0) {
+          stats.anomaliesFound++;
+        }
+      } else {
+        stats.errors++;
+        stats.lastError = result.error.message;
+        console.error(
+          `[Anomaly] Error calculating duration score for ${contract.externalId}: ${result.error.message}`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Duration batch completed:");
+    console.log(`  - Processed: ${String(stats.processed)}`);
+    console.log(`  - Calculated: ${String(stats.calculated)}`);
+    console.log(`  - Anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Process all pending contracts for duration score
+   */
+  async function processAllDurations(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log("[Anomaly] Starting full duration score processing run");
+
+    let hasMore = true;
+
+    while (hasMore) {
+      const batchResult = await processDurationBatch();
+
+      if (!batchResult.success) {
+        stats.lastError = batchResult.error.message;
+        stats.finishedAt = new Date();
+        return { success: false, error: batchResult.error };
+      }
+
+      const batchStats = batchResult.data;
+      stats.processed += batchStats.processed;
+      stats.calculated += batchStats.calculated;
+      stats.anomaliesFound += batchStats.anomaliesFound;
+      stats.errors += batchStats.errors;
+
+      if (batchStats.lastError) {
+        stats.lastError = batchStats.lastError;
+      }
+
+      // Check if there are more contracts to process
+      const remaining = await prisma.anomalyScore.count({
+        where: {
+          durationScore: 0,
+          durationReason: null,
+          contract: {
+            category: {
+              not: "OUTROS",
+            },
+          },
+        },
+      });
+
+      hasMore = remaining > 0;
+
+      if (hasMore) {
+        console.log(
+          `[Anomaly] ${String(remaining)} contracts remaining for duration score`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Full duration processing completed:");
+    console.log(`  - Total processed: ${String(stats.processed)}`);
+    console.log(`  - Total calculated: ${String(stats.calculated)}`);
+    console.log(`  - Total anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Total errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Reset duration scores for recalculation
+   */
+  async function resetDurationScores(): Promise<number> {
+    // Get all anomaly scores to recalculate totals
+    const scores = await prisma.anomalyScore.findMany({
+      select: {
+        contractId: true,
+        valueScore: true,
+        amendmentScore: true,
+        concentrationScore: true,
+      },
+    });
+
+    // Update each score individually to recalculate total
+    let count = 0;
+    for (const score of scores) {
+      const newTotal =
+        score.valueScore + score.amendmentScore + score.concentrationScore;
+      const newCategory =
+        newTotal > 50 ? "HIGH" : newTotal > 25 ? "MEDIUM" : "LOW";
+
+      await prisma.anomalyScore.update({
+        where: { contractId: score.contractId },
+        data: {
+          durationScore: 0,
+          durationReason: null,
+          totalScore: newTotal,
+          category: newCategory,
+        },
+      });
+      count++;
+    }
+
+    console.log(
+      `[Anomaly] Reset duration scores for ${String(count)} contracts`
+    );
+    return count;
+  }
+
+  /**
+   * Recalculate duration score for a specific contract
+   */
+  async function recalculateDurationScore(
+    contractId: string
+  ): Promise<Result<FullAnomalyScoreWithDuration, AnomalyError>> {
+    const contract = await getContractForDuration(contractId);
+
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    return calculateDurationScoreAndSave(contractId);
+  }
+
   return {
     // Value score (US-010)
     calculateValueScore,
@@ -1643,6 +2183,14 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     processAllConcentrations,
     resetConcentrationScores,
     recalculateConcentrationScore,
+    // Duration score (US-013)
+    calculateDurationScore,
+    calculateDurationScoreAndSave,
+    getDurationCategoryStats,
+    processDurationBatch,
+    processAllDurations,
+    resetDurationScores,
+    recalculateDurationScore,
     config: finalConfig,
   };
 }
