@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T22:13:17.701Z",
-  "currentIteration": 14,
+  "updatedAt": "2026-01-31T22:17:26.687Z",
+  "currentIteration": 15,
   "maxIterations": 10,
-  "tasksCompleted": 14,
+  "tasksCompleted": 15,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -101,8 +101,8 @@
       {
         "id": "US-015",
         "title": "API REST - Endpoints de contratos",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-016",
@@ -312,6 +312,16 @@
       "durationMs": 281293,
       "startedAt": "2026-01-31T22:01:34.789Z",
       "endedAt": "2026-01-31T22:06:16.082Z"
+    },
+    {
+      "iteration": 15,
+      "status": "completed",
+      "taskId": "US-015",
+      "taskTitle": "API REST - Endpoints de contratos",
+      "taskCompleted": true,
+      "durationMs": 420530,
+      "startedAt": "2026-01-31T22:06:17.168Z",
+      "endedAt": "2026-01-31T22:13:17.698Z"
     }
   ],
   "skippedTaskIds": [],
