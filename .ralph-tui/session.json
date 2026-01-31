@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T22:01:33.709Z",
-  "currentIteration": 12,
+  "updatedAt": "2026-01-31T22:06:16.085Z",
+  "currentIteration": 13,
   "maxIterations": 10,
-  "tasksCompleted": 12,
+  "tasksCompleted": 13,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -89,8 +89,8 @@
       {
         "id": "US-013",
         "title": "Cálculo do score de anomalia - Prazo atípico",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-014",
@@ -292,6 +292,16 @@
       "durationMs": 185605,
       "startedAt": "2026-01-31T21:54:29.463Z",
       "endedAt": "2026-01-31T21:57:35.068Z"
+    },
+    {
+      "iteration": 13,
+      "status": "completed",
+      "taskId": "US-013",
+      "taskTitle": "Cálculo do score de anomalia - Prazo atípico",
+      "taskCompleted": true,
+      "durationMs": 237530,
+      "startedAt": "2026-01-31T21:57:36.177Z",
+      "endedAt": "2026-01-31T22:01:33.707Z"
     }
   ],
   "skippedTaskIds": [],
