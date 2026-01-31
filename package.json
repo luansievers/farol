@@ -25,7 +25,11 @@
     "db:reset": "prisma migrate reset",
     "crawler": "tsx src/modules/crawler/run.ts",
     "crawler:week": "tsx src/modules/crawler/run.ts 7",
-    "crawler:month": "tsx src/modules/crawler/run.ts 30"
+    "crawler:month": "tsx src/modules/crawler/run.ts 30",
+    "detail": "tsx src/modules/crawler/run-details.ts all",
+    "detail:batch": "tsx src/modules/crawler/run-details.ts batch",
+    "detail:stats": "tsx src/modules/crawler/run-details.ts stats",
+    "detail:reset": "tsx src/modules/crawler/run-details.ts reset"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
