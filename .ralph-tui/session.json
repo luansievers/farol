@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T21:33:11.574Z",
-  "currentIteration": 6,
+  "updatedAt": "2026-01-31T21:39:20.669Z",
+  "currentIteration": 7,
   "maxIterations": 10,
-  "tasksCompleted": 6,
+  "tasksCompleted": 7,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -53,8 +53,8 @@
       {
         "id": "US-007",
         "title": "Módulo de AI configurável",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-008",
@@ -232,6 +232,16 @@
       "durationMs": 341573,
       "startedAt": "2026-01-31T21:20:44.686Z",
       "endedAt": "2026-01-31T21:26:26.259Z"
+    },
+    {
+      "iteration": 7,
+      "status": "completed",
+      "taskId": "US-007",
+      "taskTitle": "Módulo de AI configurável",
+      "taskCompleted": true,
+      "durationMs": 404231,
+      "startedAt": "2026-01-31T21:26:27.341Z",
+      "endedAt": "2026-01-31T21:33:11.572Z"
     }
   ],
   "skippedTaskIds": [],
