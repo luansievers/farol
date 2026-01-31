@@ -24,6 +24,12 @@ import type {
   DurationScoreResult,
   DurationStats,
   FullAnomalyScoreWithDuration,
+  ScoreCategory,
+  ScoreBreakdownItem,
+  ConsolidatedScoreResult,
+  ContractWithScore,
+  ContractScoreListOptions,
+  ContractScoreListResult,
 } from "./types/index.js";
 
 const DEFAULT_CONFIG: AnomalyConfig = {
@@ -2156,6 +2162,366 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     return calculateDurationScoreAndSave(contractId);
   }
 
+  // =============================================
+  // Consolidated Score Functions (US-014)
+  // =============================================
+
+  /**
+   * Calculates the category based on total score
+   * LOW: 0-30, MEDIUM: 31-60, HIGH: 61-100
+   */
+  function calculateCategory(totalScore: number): ScoreCategory {
+    if (totalScore > 60) return "HIGH";
+    if (totalScore > 30) return "MEDIUM";
+    return "LOW";
+  }
+
+  /**
+   * Builds the score breakdown from an anomaly score record
+   */
+  function buildScoreBreakdown(score: {
+    valueScore: number;
+    valueReason: string | null;
+    amendmentScore: number;
+    amendmentReason: string | null;
+    concentrationScore: number;
+    concentrationReason: string | null;
+    durationScore: number;
+    durationReason: string | null;
+  }): ScoreBreakdownItem[] {
+    return [
+      {
+        criterion: "value",
+        score: score.valueScore,
+        reason: score.valueReason,
+        isContributing: score.valueScore > 0,
+      },
+      {
+        criterion: "amendment",
+        score: score.amendmentScore,
+        reason: score.amendmentReason,
+        isContributing: score.amendmentScore > 0,
+      },
+      {
+        criterion: "concentration",
+        score: score.concentrationScore,
+        reason: score.concentrationReason,
+        isContributing: score.concentrationScore > 0,
+      },
+      {
+        criterion: "duration",
+        score: score.durationScore,
+        reason: score.durationReason,
+        isContributing: score.durationScore > 0,
+      },
+    ];
+  }
+
+  /**
+   * Gets contributing criteria names from breakdown
+   */
+  function getContributingCriteria(breakdown: ScoreBreakdownItem[]): string[] {
+    return breakdown
+      .filter((item) => item.isContributing)
+      .map((item) => item.criterion);
+  }
+
+  /**
+   * Gets the consolidated score for a contract
+   */
+  async function getConsolidatedScore(
+    contractId: string
+  ): Promise<Result<ConsolidatedScoreResult, AnomalyError>> {
+    const score = await prisma.anomalyScore.findUnique({
+      where: { contractId },
+    });
+
+    if (!score) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `No anomaly score found for contract: ${contractId}`,
+        },
+      };
+    }
+
+    const totalScore =
+      score.valueScore +
+      score.amendmentScore +
+      score.concentrationScore +
+      score.durationScore;
+    const category = calculateCategory(totalScore);
+    const breakdown = buildScoreBreakdown(score);
+    const contributingCriteria = getContributingCriteria(breakdown);
+
+    return {
+      success: true,
+      data: {
+        contractId,
+        totalScore,
+        category,
+        breakdown,
+        contributingCriteria,
+      },
+    };
+  }
+
+  /**
+   * Consolidates and saves the score for a contract
+   * Recalculates totalScore and category from individual scores
+   */
+  async function consolidateAndSave(
+    contractId: string
+  ): Promise<Result<ConsolidatedScoreResult, AnomalyError>> {
+    const score = await prisma.anomalyScore.findUnique({
+      where: { contractId },
+    });
+
+    if (!score) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `No anomaly score found for contract: ${contractId}`,
+        },
+      };
+    }
+
+    const totalScore =
+      score.valueScore +
+      score.amendmentScore +
+      score.concentrationScore +
+      score.durationScore;
+    const category = calculateCategory(totalScore);
+
+    // Update the database with consolidated values
+    await prisma.anomalyScore.update({
+      where: { contractId },
+      data: {
+        totalScore,
+        category,
+      },
+    });
+
+    const breakdown = buildScoreBreakdown(score);
+    const contributingCriteria = getContributingCriteria(breakdown);
+
+    console.log(
+      `[Anomaly] Consolidated score for ${contractId}: ${String(totalScore)}/100 (${category})`
+    );
+    if (contributingCriteria.length > 0) {
+      console.log(`  Contributing: ${contributingCriteria.join(", ")}`);
+    }
+
+    return {
+      success: true,
+      data: {
+        contractId,
+        totalScore,
+        category,
+        breakdown,
+        contributingCriteria,
+      },
+    };
+  }
+
+  /**
+   * Consolidates all anomaly scores in the database
+   */
+  async function consolidateAll(): Promise<
+    Result<{ processed: number; updated: number }, AnomalyError>
+  > {
+    const scores = await prisma.anomalyScore.findMany({
+      select: {
+        contractId: true,
+        valueScore: true,
+        amendmentScore: true,
+        concentrationScore: true,
+        durationScore: true,
+        totalScore: true,
+        category: true,
+      },
+    });
+
+    let processed = 0;
+    let updated = 0;
+
+    for (const score of scores) {
+      processed++;
+      const newTotalScore =
+        score.valueScore +
+        score.amendmentScore +
+        score.concentrationScore +
+        score.durationScore;
+      const newCategory = calculateCategory(newTotalScore);
+
+      // Only update if values changed
+      if (
+        newTotalScore !== score.totalScore ||
+        newCategory !== score.category
+      ) {
+        await prisma.anomalyScore.update({
+          where: { contractId: score.contractId },
+          data: {
+            totalScore: newTotalScore,
+            category: newCategory,
+          },
+        });
+        updated++;
+      }
+    }
+
+    console.log(
+      `[Anomaly] Consolidated ${String(processed)} scores, updated ${String(updated)}`
+    );
+
+    return {
+      success: true,
+      data: { processed, updated },
+    };
+  }
+
+  /**
+   * Gets contracts ordered by score with pagination
+   */
+  async function getContractsByScore(
+    options: ContractScoreListOptions = {}
+  ): Promise<Result<ContractScoreListResult, AnomalyError>> {
+    const {
+      page = 1,
+      pageSize = 20,
+      category,
+      minScore,
+      orderBy = "score",
+      order = "desc",
+    } = options;
+
+    // Build where clause
+    const where: {
+      category?: string;
+      totalScore?: { gte: number };
+    } = {};
+
+    if (category) {
+      where.category = category;
+    }
+    if (minScore !== undefined) {
+      where.totalScore = { gte: minScore };
+    }
+
+    // Get total count
+    const total = await prisma.anomalyScore.count({ where });
+
+    // Get paginated results
+    const scores = await prisma.anomalyScore.findMany({
+      where,
+      orderBy:
+        orderBy === "score"
+          ? { totalScore: order }
+          : { contract: { value: order } },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        contract: {
+          select: {
+            id: true,
+            externalId: true,
+            object: true,
+            value: true,
+            category: true,
+          },
+        },
+      },
+    });
+
+    const contracts: ContractWithScore[] = scores.map((score) => {
+      const breakdown = buildScoreBreakdown(score);
+      return {
+        id: score.contract.id,
+        externalId: score.contract.externalId,
+        object: score.contract.object,
+        value: Number(score.contract.value),
+        category: score.contract.category,
+        totalScore: score.totalScore,
+        scoreCategory: score.category as ScoreCategory,
+        breakdown,
+        contributingCriteria: getContributingCriteria(breakdown),
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        contracts,
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    };
+  }
+
+  /**
+   * Gets summary statistics for consolidated scores
+   */
+  async function getConsolidatedStats(): Promise<{
+    total: number;
+    byCategory: { LOW: number; MEDIUM: number; HIGH: number };
+    averageTotalScore: number;
+    withAnomalies: number;
+    byCriterion: {
+      value: number;
+      amendment: number;
+      concentration: number;
+      duration: number;
+    };
+  }> {
+    const [
+      total,
+      lowCount,
+      mediumCount,
+      highCount,
+      avgResult,
+      withValueAnomaly,
+      withAmendmentAnomaly,
+      withConcentrationAnomaly,
+      withDurationAnomaly,
+    ] = await Promise.all([
+      prisma.anomalyScore.count(),
+      prisma.anomalyScore.count({ where: { category: "LOW" } }),
+      prisma.anomalyScore.count({ where: { category: "MEDIUM" } }),
+      prisma.anomalyScore.count({ where: { category: "HIGH" } }),
+      prisma.anomalyScore.aggregate({ _avg: { totalScore: true } }),
+      prisma.anomalyScore.count({ where: { valueScore: { gt: 0 } } }),
+      prisma.anomalyScore.count({ where: { amendmentScore: { gt: 0 } } }),
+      prisma.anomalyScore.count({ where: { concentrationScore: { gt: 0 } } }),
+      prisma.anomalyScore.count({ where: { durationScore: { gt: 0 } } }),
+    ]);
+
+    // Count contracts with any anomaly (totalScore > 0)
+    const withAnomalies = await prisma.anomalyScore.count({
+      where: { totalScore: { gt: 0 } },
+    });
+
+    return {
+      total,
+      byCategory: {
+        LOW: lowCount,
+        MEDIUM: mediumCount,
+        HIGH: highCount,
+      },
+      averageTotalScore: avgResult._avg.totalScore ?? 0,
+      withAnomalies,
+      byCriterion: {
+        value: withValueAnomaly,
+        amendment: withAmendmentAnomaly,
+        concentration: withConcentrationAnomaly,
+        duration: withDurationAnomaly,
+      },
+    };
+  }
+
   return {
     // Value score (US-010)
     calculateValueScore,
@@ -2191,6 +2557,12 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     processAllDurations,
     resetDurationScores,
     recalculateDurationScore,
+    // Consolidated score (US-014)
+    getConsolidatedScore,
+    consolidateAndSave,
+    consolidateAll,
+    getContractsByScore,
+    getConsolidatedStats,
     config: finalConfig,
   };
 }

@@ -415,6 +415,155 @@ async function main() {
       break;
     }
 
+    // Consolidated score commands (US-014)
+    case "consolidate": {
+      const subCommand = arg1 ?? "all";
+
+      switch (subCommand) {
+        case "all": {
+          console.log("Consolidating all anomaly scores...\n");
+          const result = await service.consolidateAll();
+          if (result.success) {
+            console.log(`Processed: ${String(result.data.processed)}`);
+            console.log(`Updated: ${String(result.data.updated)}`);
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "stats": {
+          console.log("Consolidated Score Statistics:\n");
+          const stats = await service.getConsolidatedStats();
+          console.log(`Total Contracts: ${String(stats.total)}`);
+          console.log(
+            `Average Score: ${stats.averageTotalScore.toFixed(2)}/100`
+          );
+          console.log(`With Anomalies: ${String(stats.withAnomalies)}`);
+          console.log("\nBy Category:");
+          console.log(`  LOW (0-30): ${String(stats.byCategory.LOW)}`);
+          console.log(`  MEDIUM (31-60): ${String(stats.byCategory.MEDIUM)}`);
+          console.log(`  HIGH (61-100): ${String(stats.byCategory.HIGH)}`);
+          console.log("\nBy Criterion (contracts with score > 0):");
+          console.log(`  Value: ${String(stats.byCriterion.value)}`);
+          console.log(`  Amendment: ${String(stats.byCriterion.amendment)}`);
+          console.log(
+            `  Concentration: ${String(stats.byCriterion.concentration)}`
+          );
+          console.log(`  Duration: ${String(stats.byCriterion.duration)}`);
+          break;
+        }
+
+        case "list": {
+          const pageArg = process.argv[4];
+          const page = pageArg ? parseInt(pageArg, 10) : 1;
+          console.log(`Contracts by Score (Page ${String(page)}):\n`);
+          const result = await service.getContractsByScore({
+            page,
+            pageSize: 20,
+            orderBy: "score",
+            order: "desc",
+          });
+          if (result.success) {
+            const { contracts, total, totalPages } = result.data;
+            console.log(
+              `Total: ${String(total)} | Page ${String(page)}/${String(totalPages)}\n`
+            );
+            for (const contract of contracts) {
+              const criteria =
+                contract.contributingCriteria.length > 0
+                  ? ` [${contract.contributingCriteria.join(", ")}]`
+                  : "";
+              console.log(
+                `${contract.externalId}: ${String(contract.totalScore)}/100 (${contract.scoreCategory})${criteria}`
+              );
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "high": {
+          console.log("HIGH Risk Contracts:\n");
+          const result = await service.getContractsByScore({
+            category: "HIGH",
+            orderBy: "score",
+            order: "desc",
+            pageSize: 50,
+          });
+          if (result.success) {
+            const { contracts, total } = result.data;
+            console.log(`Total HIGH risk: ${String(total)}\n`);
+            for (const contract of contracts) {
+              const criteria = contract.contributingCriteria.join(", ");
+              console.log(
+                `${contract.externalId}: ${String(contract.totalScore)}/100 [${criteria}]`
+              );
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        default: {
+          // Treat as contract ID for single lookup
+          console.log(`Consolidated score for contract ${subCommand}:\n`);
+          const result = await service.getConsolidatedScore(subCommand);
+          if (result.success) {
+            const { totalScore, category, breakdown, contributingCriteria } =
+              result.data;
+            console.log(`Total Score: ${String(totalScore)}/100`);
+            console.log(`Category: ${category}`);
+            console.log("\nBreakdown:");
+            for (const item of breakdown) {
+              const marker = item.isContributing ? "✓" : " ";
+              console.log(
+                `  [${marker}] ${item.criterion}: ${String(item.score)}/25`
+              );
+              if (item.reason) {
+                console.log(`      ${item.reason}`);
+              }
+            }
+            if (contributingCriteria.length > 0) {
+              console.log(
+                `\nContributing Criteria: ${contributingCriteria.join(", ")}`
+              );
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+        }
+      }
+      break;
+    }
+
+    case "consolidate:save": {
+      if (!arg1) {
+        console.error("Error: Contract ID required");
+        console.log("Usage: pnpm anomaly consolidate:save <contractId>");
+        process.exit(1);
+      }
+      console.log(`Consolidating and saving score for ${arg1}...\n`);
+      const result = await service.consolidateAndSave(arg1);
+      if (result.success) {
+        console.log(`Total Score: ${String(result.data.totalScore)}/100`);
+        console.log(`Category: ${result.data.category}`);
+        console.log(
+          `Contributing: ${result.data.contributingCriteria.join(", ") || "none"}`
+        );
+      } else {
+        console.error("Error:", result.error.message);
+        process.exit(1);
+      }
+      break;
+    }
+
     default:
       console.log("Anomaly Score Commands:");
       console.log("\nValue Score (US-010):");
@@ -473,6 +622,21 @@ async function main() {
       );
       console.log(
         "  duration:recalculate <id> - Recalculate and save duration score"
+      );
+      console.log("\nConsolidated Score (US-014):");
+      console.log(
+        "  consolidate all      - Recalculate all totalScore and category"
+      );
+      console.log("  consolidate stats    - Show consolidated statistics");
+      console.log(
+        "  consolidate list [page] - List contracts by score (paginated)"
+      );
+      console.log("  consolidate high     - List HIGH risk contracts");
+      console.log(
+        "  consolidate <id>     - Show consolidated score for a contract"
+      );
+      console.log(
+        "  consolidate:save <id> - Consolidate and save score for a contract"
       );
   }
 }

@@ -180,3 +180,55 @@ export interface CategoryStats {
   count: number;
   calculatedAt: Date;
 }
+
+// Consolidated score category (US-014)
+export type ScoreCategory = "LOW" | "MEDIUM" | "HIGH";
+
+// Individual score breakdown item (US-014)
+export interface ScoreBreakdownItem {
+  criterion: "value" | "amendment" | "concentration" | "duration";
+  score: number;
+  reason: string | null;
+  isContributing: boolean; // score > 0
+}
+
+// Consolidated score result (US-014)
+export interface ConsolidatedScoreResult {
+  contractId: string;
+  totalScore: number; // 0-100
+  category: ScoreCategory;
+  breakdown: ScoreBreakdownItem[];
+  contributingCriteria: string[]; // List of criteria names that contributed (score > 0)
+}
+
+// Contract with consolidated score for listing (US-014)
+export interface ContractWithScore {
+  id: string;
+  externalId: string;
+  object: string | null;
+  value: number;
+  category: string | null;
+  totalScore: number;
+  scoreCategory: ScoreCategory;
+  breakdown: ScoreBreakdownItem[];
+  contributingCriteria: string[];
+}
+
+// Pagination options for contract listing (US-014)
+export interface ContractScoreListOptions {
+  page?: number;
+  pageSize?: number;
+  category?: ScoreCategory;
+  minScore?: number;
+  orderBy?: "score" | "value";
+  order?: "asc" | "desc";
+}
+
+// Paginated result for contract listing (US-014)
+export interface ContractScoreListResult {
+  contracts: ContractWithScore[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
