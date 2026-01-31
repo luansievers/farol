@@ -79,20 +79,34 @@ export function useContractAmendments(id: string) {
   });
 }
 
+// Similar contracts filter options
+export interface SimilarContractsParams {
+  startDate?: string;
+  endDate?: string;
+}
+
 // Fetch similar contracts
 async function fetchSimilarContracts(
-  id: string
+  id: string,
+  params?: SimilarContractsParams
 ): Promise<SimilarContractsResponseDto> {
-  const response = await api.get<SimilarContractsResponseDto>(
-    `/contracts/${id}/similar`
-  );
+  const searchParams = new URLSearchParams();
+  if (params?.startDate) searchParams.set("startDate", params.startDate);
+  if (params?.endDate) searchParams.set("endDate", params.endDate);
+
+  const queryString = searchParams.toString();
+  const url = queryString
+    ? `/contracts/${id}/similar?${queryString}`
+    : `/contracts/${id}/similar`;
+
+  const response = await api.get<SimilarContractsResponseDto>(url);
   return response.data;
 }
 
-export function useSimilarContracts(id: string) {
+export function useSimilarContracts(id: string, params?: SimilarContractsParams) {
   return useQuery({
-    queryKey: contractKeys.similar(id),
-    queryFn: () => fetchSimilarContracts(id),
+    queryKey: [...contractKeys.similar(id), params] as const,
+    queryFn: () => fetchSimilarContracts(id, params),
     enabled: !!id,
   });
 }

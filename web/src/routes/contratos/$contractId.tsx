@@ -1,10 +1,12 @@
+import { useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button, Badge } from "@/components/ui";
 import {
   ScoreBadge,
   ScoreBreakdown,
   AmendmentsList,
-  SimilarContractsPreview,
+  ContractComparison,
+  type PeriodFilter,
 } from "@/components/contracts";
 import {
   useContractDetail,
@@ -20,6 +22,7 @@ import {
   FileText,
   Sparkles,
   TrendingUp,
+  Scale,
 } from "lucide-react";
 
 export const Route = createFileRoute("/contratos/$contractId")({
@@ -45,14 +48,33 @@ function formatCNPJ(cnpj: string): string {
   );
 }
 
+// Calculate date range for period filter
+function getPeriodDates(period: PeriodFilter): { startDate?: string; endDate?: string } {
+  if (period === "all") return {};
+
+  const now = new Date();
+  const years = parseInt(period.replace("y", ""), 10);
+  const startDate = new Date(now);
+  startDate.setFullYear(startDate.getFullYear() - years);
+
+  return {
+    startDate: startDate.toISOString(),
+    endDate: now.toISOString(),
+  };
+}
+
 function ContractDetailPage() {
   const { contractId } = Route.useParams();
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilter>("all");
+
+  // Calculate date filters based on selected period
+  const periodDates = useMemo(() => getPeriodDates(selectedPeriod), [selectedPeriod]);
 
   const { data: contract, isLoading, error } = useContractDetail(contractId);
   const { data: amendments, isLoading: amendmentsLoading } =
     useContractAmendments(contractId);
   const { data: similarContracts, isLoading: similarLoading } =
-    useSimilarContracts(contractId);
+    useSimilarContracts(contractId, periodDates);
 
   if (isLoading) {
     return (
@@ -291,35 +313,43 @@ function ContractDetailPage() {
             )}
           </div>
 
-          {/* Similar Contracts Preview */}
-          <div className="rounded-lg border bg-card p-6">
-            <h2 className="font-semibold mb-4 flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Contratos Similares
-            </h2>
-            {similarContracts ? (
-              <SimilarContractsPreview
-                data={similarContracts}
-                isLoading={similarLoading}
-              />
-            ) : similarLoading ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="h-16 rounded-lg bg-muted animate-pulse"
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">
-                Não foi possível carregar contratos similares.
-              </p>
-            )}
-          </div>
         </div>
+      </div>
+
+      {/* Contract Comparison Section - Full Width */}
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="font-semibold mb-4 flex items-center gap-2">
+          <Scale className="h-4 w-4" />
+          Comparação com Contratos Similares
+        </h2>
+        {similarContracts ? (
+          <ContractComparison
+            data={similarContracts}
+            selectedPeriod={selectedPeriod}
+            onPeriodChange={setSelectedPeriod}
+            isLoading={similarLoading}
+          />
+        ) : similarLoading ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+              <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+            </div>
+            <div className="h-48 bg-muted animate-pulse rounded-lg" />
+            <div className="grid grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-20 rounded-lg bg-muted animate-pulse"
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground py-8">
+            Não foi possível carregar contratos similares.
+          </p>
+        )}
       </div>
     </div>
   );
