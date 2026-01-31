@@ -1,14 +1,15 @@
 {
   "id": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
-  "status": "running",
+  "status": "completed",
   "startedAt": "2026-01-31T20:50:31.384Z",
-  "updatedAt": "2026-01-31T23:25:22.774Z",
+  "updatedAt": "2026-01-31T23:37:50.820Z",
   "agentPlugin": "claude",
   "trackerPlugin": "json",
   "prdPath": "./tasks/prd.json",
-  "currentIteration": 25,
+  "currentIteration": 26,
   "maxIterations": 40,
   "totalTasks": 0,
-  "tasksCompleted": 25,
-  "cwd": "/Users/luansievers/Documents/dev/farol"
+  "tasksCompleted": 26,
+  "cwd": "/Users/luansievers/Documents/dev/farol",
+  "endedAt": "2026-01-31T23:37:50.820Z"
 }
