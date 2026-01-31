@@ -1,0 +1,174 @@
+// Prisma schema for Farol - Radar de Contratos
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Government agencies (Secretarias, Autarquias, etc.)
+model Agency {
+  id        String   @id @default(cuid())
+  code      String   @unique // Portal code identifier
+  name      String
+  acronym   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  contracts Contract[]
+
+  @@map("agencies")
+}
+
+// Suppliers (Fornecedores)
+model Supplier {
+  id           String   @id @default(cuid())
+  cnpj         String   @unique
+  tradeName    String   @map("trade_name") // Nome fantasia
+  legalName    String   @map("legal_name") // Razao social
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  contracts Contract[]
+
+  @@map("suppliers")
+}
+
+// Contract categories for classification
+enum ContractCategory {
+  OBRAS        // Construction/infrastructure
+  SERVICOS     // General services
+  TI           // IT/Technology
+  SAUDE        // Healthcare
+  EDUCACAO     // Education
+  OUTROS       // Other
+}
+
+// Contract status
+enum ContractStatus {
+  ACTIVE       // Currently active
+  COMPLETED    // Fulfilled
+  CANCELLED    // Cancelled
+  SUSPENDED    // Temporarily suspended
+}
+
+// Processing status for crawler/AI pipeline
+enum ProcessingStatus {
+  PENDING          // Not yet processed
+  FETCHING_DETAILS // Fetching details from portal
+  DOWNLOADING_PDF  // Downloading PDF document
+  EXTRACTING_TEXT  // Extracting text from PDF
+  GENERATING_SUMMARY // AI generating summary
+  CALCULATING_SCORE  // Calculating anomaly score
+  COMPLETED        // Fully processed
+  FAILED           // Processing failed
+}
+
+// Contracts (Contratos)
+model Contract {
+  id                String           @id @default(cuid())
+  externalId        String           @unique @map("external_id") // Portal ID
+  number            String           // Contract number
+  object            String           // Object description
+  value             Decimal          @db.Decimal(15, 2) // Total value
+  category          ContractCategory @default(OUTROS)
+  categoryManual    Boolean          @default(false) @map("category_manual") // Manually set category
+  modalidade        String?          // Bidding modality
+  status            ContractStatus   @default(ACTIVE)
+  processingStatus  ProcessingStatus @default(PENDING) @map("processing_status")
+
+  // Dates
+  signatureDate     DateTime?        @map("signature_date")
+  startDate         DateTime?        @map("start_date")
+  endDate           DateTime?        @map("end_date")
+  publicationDate   DateTime?        @map("publication_date")
+
+  // Document storage
+  pdfUrl            String?          @map("pdf_url") // Original PDF URL from portal
+  storagePath       String?          @map("storage_path") // Cloud storage path
+  extractedText     String?          @map("extracted_text") @db.Text
+
+  // AI-generated content
+  summary           String?          @db.Text
+  summaryGeneratedAt DateTime?       @map("summary_generated_at")
+
+  // Metadata
+  isPartiallyRedacted Boolean        @default(false) @map("is_partially_redacted")
+  isConfidential    Boolean          @default(false) @map("is_confidential")
+  lastFetchedAt     DateTime?        @map("last_fetched_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  agencyId          String           @map("agency_id")
+  agency            Agency           @relation(fields: [agencyId], references: [id])
+
+  supplierId        String           @map("supplier_id")
+  supplier          Supplier         @relation(fields: [supplierId], references: [id])
+
+  amendments        Amendment[]
+  anomalyScore      AnomalyScore?
+
+  @@index([agencyId])
+  @@index([supplierId])
+  @@index([category])
+  @@index([status])
+  @@index([processingStatus])
+  @@index([signatureDate])
+  @@index([value])
+  @@map("contracts")
+}
+
+// Contract amendments (Aditivos)
+model Amendment {
+  id            String   @id @default(cuid())
+  externalId    String   @unique @map("external_id")
+  number        Int      // Amendment number (1, 2, 3...)
+  type          String   // Type: value, duration, object, etc.
+  description   String?  @db.Text
+  valueChange   Decimal? @db.Decimal(15, 2) @map("value_change") // Value modification (+/-)
+  durationChange Int?    @map("duration_change") // Days added/removed
+  signatureDate DateTime? @map("signature_date")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  contractId    String   @map("contract_id")
+  contract      Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+  @@map("amendments")
+}
+
+// Anomaly score breakdown for each contract
+model AnomalyScore {
+  id              String   @id @default(cuid())
+  totalScore      Int      @map("total_score") // 0-100
+  category        String   // LOW, MEDIUM, HIGH
+
+  // Individual scores (0-25 each)
+  valueScore      Int      @map("value_score")
+  valueReason     String?  @map("value_reason")
+
+  amendmentScore  Int      @map("amendment_score")
+  amendmentReason String?  @map("amendment_reason")
+
+  concentrationScore Int   @map("concentration_score")
+  concentrationReason String? @map("concentration_reason")
+
+  durationScore   Int      @map("duration_score")
+  durationReason  String?  @map("duration_reason")
+
+  calculatedAt    DateTime @default(now()) @map("calculated_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  contractId      String   @unique @map("contract_id")
+  contract        Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([totalScore])
+  @@index([category])
+  @@map("anomaly_scores")
+}
