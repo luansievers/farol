@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T22:36:18.654Z",
-  "currentIteration": 18,
+  "updatedAt": "2026-01-31T22:51:43.207Z",
+  "currentIteration": 19,
   "maxIterations": 10,
-  "tasksCompleted": 18,
+  "tasksCompleted": 19,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -125,8 +125,8 @@
       {
         "id": "US-019",
         "title": "Interface Web - Lista de contratos",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-020",
@@ -352,6 +352,16 @@
       "durationMs": 423099,
       "startedAt": "2026-01-31T22:22:59.904Z",
       "endedAt": "2026-01-31T22:30:03.003Z"
+    },
+    {
+      "iteration": 19,
+      "status": "completed",
+      "taskId": "US-019",
+      "taskTitle": "Interface Web - Lista de contratos",
+      "taskCompleted": true,
+      "durationMs": 374567,
+      "startedAt": "2026-01-31T22:30:04.085Z",
+      "endedAt": "2026-01-31T22:36:18.652Z"
     }
   ],
   "skippedTaskIds": [],

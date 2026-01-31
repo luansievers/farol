@@ -439,12 +439,13 @@
         "Verificar no browser usando dev-browser skill"
       ],
       "priority": 20,
-      "passes": false,
+      "passes": true,
       "notes": "",
       "dependsOn": [
         "US-019",
         "US-016"
-      ]
+      ],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-021",
@@ -579,6 +580,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-01-31T22:36:18.653Z"
+    "updatedAt": "2026-01-31T22:51:43.199Z"
   }
 }
