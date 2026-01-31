@@ -15,139 +15,261 @@ export const suppliersRouter = new OpenAPIHono();
 // ============== Schemas ==============
 
 // Score breakdown item schema
-const ScoreBreakdownItemSchema = z.object({
-  criterion: z.enum(["value", "amendment", "concentration", "duration"]),
-  score: z.number().int().min(0).max(25),
-  reason: z.string().nullable(),
-  isContributing: z.boolean(),
-});
+const ScoreBreakdownItemSchema = z
+  .object({
+    criterion: z
+      .enum(["value", "amendment", "concentration", "duration"])
+      .openapi({
+        description: "The criterion being evaluated",
+        example: "concentration",
+      }),
+    score: z.number().int().min(0).max(25).openapi({
+      description: "Score for this criterion (0-25)",
+      example: 20,
+    }),
+    reason: z.string().nullable().openapi({
+      description: "Explanation for the score",
+      example: "Supplier has 80% of contracts with this agency",
+    }),
+    isContributing: z.boolean().openapi({
+      description: "Whether this criterion contributes significantly",
+      example: true,
+    }),
+  })
+  .openapi({ description: "Score breakdown by criterion" });
 
 // Anomaly score schema
-const AnomalyScoreSchema = z.object({
-  totalScore: z.number().int().min(0).max(100),
-  category: z.enum(["LOW", "MEDIUM", "HIGH"]),
-  breakdown: z.array(ScoreBreakdownItemSchema),
-  calculatedAt: z.iso.datetime(),
-});
+const AnomalyScoreSchema = z
+  .object({
+    totalScore: z.number().int().min(0).max(100).openapi({
+      description: "Total anomaly score (0-100)",
+      example: 45,
+    }),
+    category: z.enum(["LOW", "MEDIUM", "HIGH"]).openapi({
+      description: "Risk category based on total score",
+      example: "MEDIUM",
+    }),
+    breakdown: z.array(ScoreBreakdownItemSchema),
+    calculatedAt: z.iso.datetime().openapi({
+      description: "When the score was calculated (ISO 8601)",
+      example: "2024-06-15T10:30:00.000Z",
+    }),
+  })
+  .openapi({ description: "Contract anomaly score" });
 
 // Agency schema
-const AgencySchema = z.object({
-  id: z.string(),
-  code: z.string(),
-  name: z.string(),
-  acronym: z.string().nullable(),
-});
+const AgencySchema = z
+  .object({
+    id: z
+      .string()
+      .openapi({ description: "Agency ID", example: "clx123abc456" }),
+    code: z
+      .string()
+      .openapi({ description: "Official agency code", example: "26246" }),
+    name: z
+      .string()
+      .openapi({ description: "Full name", example: "Ministério da Saúde" }),
+    acronym: z
+      .string()
+      .nullable()
+      .openapi({ description: "Acronym", example: "MS" }),
+  })
+  .openapi({ description: "Government agency summary" });
 
 // Supplier metrics schema
-const SupplierMetricsSchema = z.object({
-  totalContracts: z.number().int().nonnegative(),
-  totalValue: z.number().nonnegative(),
-  averageScore: z.number().nullable(),
-});
+const SupplierMetricsSchema = z
+  .object({
+    totalContracts: z.number().int().nonnegative().openapi({
+      description: "Total number of contracts",
+      example: 15,
+    }),
+    totalValue: z.number().nonnegative().openapi({
+      description: "Total contracted value in BRL",
+      example: 25000000.0,
+    }),
+    averageScore: z.number().nullable().openapi({
+      description: "Average anomaly score across all contracts",
+      example: 35.5,
+    }),
+  })
+  .openapi({ description: "Aggregated supplier metrics" });
 
 // Supplier list item schema
-const SupplierListItemSchema = z.object({
-  id: z.string(),
-  cnpj: z.string(),
-  tradeName: z.string(),
-  legalName: z.string(),
-  metrics: SupplierMetricsSchema,
-});
+const SupplierListItemSchema = z
+  .object({
+    id: z
+      .string()
+      .openapi({ description: "Supplier ID", example: "clx789def012" }),
+    cnpj: z
+      .string()
+      .openapi({ description: "CNPJ", example: "12.345.678/0001-90" }),
+    tradeName: z
+      .string()
+      .openapi({ description: "Trade name", example: "Tech Solutions" }),
+    legalName: z
+      .string()
+      .openapi({ description: "Legal name", example: "Tech Solutions Ltda" }),
+    metrics: SupplierMetricsSchema,
+  })
+  .openapi({ description: "Supplier summary for list views" });
 
 // Contract category enum
-const ContractCategoryEnum = z.enum([
-  "OBRAS",
-  "SERVICOS",
-  "TI",
-  "SAUDE",
-  "EDUCACAO",
-  "OUTROS",
-]);
+const ContractCategoryEnum = z
+  .enum(["OBRAS", "SERVICOS", "TI", "SAUDE", "EDUCACAO", "OUTROS"])
+  .openapi({ description: "Contract category", example: "TI" });
 
 // Contract status enum
-const ContractStatusEnum = z.enum([
-  "ACTIVE",
-  "COMPLETED",
-  "CANCELLED",
-  "SUSPENDED",
-]);
+const ContractStatusEnum = z
+  .enum(["ACTIVE", "COMPLETED", "CANCELLED", "SUSPENDED"])
+  .openapi({ description: "Contract status", example: "ACTIVE" });
 
 // Supplier contract schema
-const SupplierContractSchema = z.object({
-  id: z.string(),
-  externalId: z.string(),
-  number: z.string(),
-  object: z.string(),
-  value: z.number(),
-  category: ContractCategoryEnum,
-  status: ContractStatusEnum,
-  signatureDate: z.iso.datetime().nullable(),
-  agency: AgencySchema,
-  anomalyScore: AnomalyScoreSchema.nullable(),
-});
+const SupplierContractSchema = z
+  .object({
+    id: z
+      .string()
+      .openapi({ description: "Contract ID", example: "clx456ghi789" }),
+    externalId: z
+      .string()
+      .openapi({ description: "External ID", example: "123456789" }),
+    number: z
+      .string()
+      .openapi({ description: "Contract number", example: "CT-2024/0001" }),
+    object: z.string().openapi({
+      description: "Contract object",
+      example: "Desenvolvimento de sistema de gestão",
+    }),
+    value: z
+      .number()
+      .openapi({ description: "Value in BRL", example: 500000.0 }),
+    category: ContractCategoryEnum,
+    status: ContractStatusEnum,
+    signatureDate: z.iso.datetime().nullable().openapi({
+      description: "Signature date (ISO 8601)",
+      example: "2024-03-15T00:00:00.000Z",
+    }),
+    agency: AgencySchema,
+    anomalyScore: AnomalyScoreSchema.nullable(),
+  })
+  .openapi({ description: "Contract associated with the supplier" });
 
 // Supplier detail schema
-const SupplierDetailSchema = z.object({
-  id: z.string(),
-  cnpj: z.string(),
-  tradeName: z.string(),
-  legalName: z.string(),
-  metrics: SupplierMetricsSchema,
-  contracts: z.array(SupplierContractSchema),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
+const SupplierDetailSchema = z
+  .object({
+    id: z
+      .string()
+      .openapi({ description: "Supplier ID", example: "clx789def012" }),
+    cnpj: z
+      .string()
+      .openapi({ description: "CNPJ", example: "12.345.678/0001-90" }),
+    tradeName: z
+      .string()
+      .openapi({ description: "Trade name", example: "Tech Solutions" }),
+    legalName: z
+      .string()
+      .openapi({ description: "Legal name", example: "Tech Solutions Ltda" }),
+    metrics: SupplierMetricsSchema,
+    contracts: z.array(SupplierContractSchema).openapi({
+      description: "Recent contracts (up to 10)",
+    }),
+    createdAt: z.iso.datetime().openapi({
+      description: "Record creation timestamp",
+      example: "2024-01-10T09:00:00.000Z",
+    }),
+    updatedAt: z.iso.datetime().openapi({
+      description: "Last update timestamp",
+      example: "2024-06-15T10:30:00.000Z",
+    }),
+  })
+  .openapi({ description: "Full supplier details with contracts" });
 
 // Pagination schema
-const PaginationSchema = z.object({
-  page: z.number().int().positive(),
-  pageSize: z.number().int().positive(),
-  total: z.number().int().nonnegative(),
-  totalPages: z.number().int().nonnegative(),
-});
+const PaginationSchema = z
+  .object({
+    page: z
+      .number()
+      .int()
+      .positive()
+      .openapi({ description: "Current page", example: 1 }),
+    pageSize: z
+      .number()
+      .int()
+      .positive()
+      .openapi({ description: "Items per page", example: 20 }),
+    total: z
+      .number()
+      .int()
+      .nonnegative()
+      .openapi({ description: "Total items", example: 150 }),
+    totalPages: z
+      .number()
+      .int()
+      .nonnegative()
+      .openapi({ description: "Total pages", example: 8 }),
+  })
+  .openapi({ description: "Pagination metadata" });
 
 // Paginated suppliers response schema
-const PaginatedSuppliersResponseSchema = z.object({
-  data: z.array(SupplierListItemSchema),
-  pagination: PaginationSchema,
-});
+const PaginatedSuppliersResponseSchema = z
+  .object({
+    data: z.array(SupplierListItemSchema),
+    pagination: PaginationSchema,
+  })
+  .openapi({ description: "Paginated list of suppliers" });
 
 // Error response schema
-const ErrorResponseSchema = z.object({
-  code: z.enum([
-    "NOT_FOUND",
-    "INVALID_PARAMS",
-    "DATABASE_ERROR",
-    "INTERNAL_ERROR",
-  ]),
-  message: z.string(),
-  details: z.unknown().optional(),
-});
+const ErrorResponseSchema = z
+  .object({
+    code: z
+      .enum(["NOT_FOUND", "INVALID_PARAMS", "DATABASE_ERROR", "INTERNAL_ERROR"])
+      .openapi({
+        description: "Error code",
+        example: "NOT_FOUND",
+      }),
+    message: z
+      .string()
+      .openapi({ description: "Error message", example: "Supplier not found" }),
+    details: z
+      .unknown()
+      .optional()
+      .openapi({ description: "Additional details (dev mode only)" }),
+  })
+  .openapi({ description: "Error response" });
 
 // Query parameters for list suppliers
 const ListSuppliersQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1).openapi({ example: 1 }),
-  pageSize: z.coerce
-    .number()
-    .int()
-    .positive()
-    .max(100)
-    .default(20)
-    .openapi({ example: 20 }),
+  page: z.coerce.number().int().positive().default(1).openapi({
+    description: "Page number (1-indexed)",
+    example: 1,
+  }),
+  pageSize: z.coerce.number().int().positive().max(100).default(20).openapi({
+    description: "Items per page (max 100)",
+    example: 20,
+  }),
   search: z.string().optional().openapi({
-    example: "empresa",
-    description: "Search by trade name, legal name, or CNPJ",
+    description: "Search by trade name, legal name, or CNPJ (partial match)",
+    example: "tech",
   }),
   sortBy: z
     .enum(["tradeName", "totalContracts", "totalValue"])
     .default("tradeName")
-    .openapi({ example: "tradeName" }),
-  order: z.enum(["asc", "desc"]).default("asc").openapi({ example: "asc" }),
+    .openapi({
+      description:
+        "Sort field: tradeName (default), totalContracts, or totalValue",
+      example: "totalValue",
+    }),
+  order: z.enum(["asc", "desc"]).default("asc").openapi({
+    description: "Sort order: asc (default) or desc",
+    example: "desc",
+  }),
 });
 
 // Path parameters for get supplier by id
 const SupplierIdParamSchema = z.object({
-  id: z.string().openapi({ example: "clx789ghi" }),
+  id: z.string().openapi({
+    description: "Supplier unique identifier",
+    example: "clx789def012",
+  }),
 });
 
 // ============== Routes ==============

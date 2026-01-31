@@ -33,13 +33,89 @@ app.doc("/api/docs/openapi.json", {
   info: {
     title: "Farol - Radar de Contratos API",
     version: "1.0.0",
-    description:
-      "API for accessing public contract data with AI-generated summaries and anomaly scores",
+    description: `
+## Overview
+
+Farol API provides access to Brazilian public contract data with AI-powered analysis including automated summaries and anomaly detection scores.
+
+## Features
+
+- **Contracts**: Browse and search public contracts with filtering, pagination, and sorting
+- **Suppliers**: View supplier profiles with aggregated metrics and contract history
+- **Agencies**: Explore government agencies and their contracting patterns
+- **Search**: Global search across contracts, suppliers, and agencies
+- **AI Analysis**: AI-generated contract summaries and anomaly scores
+
+## Authentication
+
+Currently, the API is open and does not require authentication.
+
+## Rate Limiting
+
+No rate limiting is currently enforced.
+
+## Pagination
+
+All list endpoints support pagination with \`page\` and \`pageSize\` query parameters:
+- \`page\`: Page number (1-indexed, default: 1)
+- \`pageSize\`: Items per page (max: 100, default: 20)
+
+## Sorting
+
+List endpoints support sorting with \`sortBy\` and \`order\` parameters.
+
+## Error Handling
+
+Errors follow a consistent format:
+\`\`\`json
+{
+  "code": "NOT_FOUND | INVALID_PARAMS | DATABASE_ERROR | INTERNAL_ERROR",
+  "message": "Human-readable error description",
+  "details": {} // Only in development mode
+}
+\`\`\`
+
+## Anomaly Scores
+
+Contracts are analyzed for potential anomalies across 4 criteria (0-25 points each):
+- **value**: Unusual contract value compared to similar contracts
+- **amendment**: Excessive amendments/modifications
+- **concentration**: Supplier concentration risk
+- **duration**: Unusual contract duration
+
+Total score ranges from 0-100, categorized as LOW (0-33), MEDIUM (34-66), or HIGH (67-100).
+    `.trim(),
+    contact: {
+      name: "Farol Team",
+      url: "https://github.com/farol-radar",
+    },
+    license: {
+      name: "MIT",
+      url: "https://opensource.org/licenses/MIT",
+    },
   },
   servers: [
     {
       url: "http://localhost:3000",
       description: "Development server",
+    },
+  ],
+  tags: [
+    {
+      name: "Contracts",
+      description: "Public contract data with AI summaries and anomaly scores",
+    },
+    {
+      name: "Suppliers",
+      description: "Supplier/contractor profiles and metrics",
+    },
+    {
+      name: "Agencies",
+      description: "Government agency profiles and metrics",
+    },
+    {
+      name: "Search",
+      description: "Global search across all entities",
     },
   ],
 });
