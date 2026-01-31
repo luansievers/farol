@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T22:51:43.207Z",
-  "currentIteration": 19,
+  "updatedAt": "2026-01-31T22:58:46.384Z",
+  "currentIteration": 20,
   "maxIterations": 10,
-  "tasksCompleted": 19,
+  "tasksCompleted": 20,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -131,8 +131,8 @@
       {
         "id": "US-020",
         "title": "Interface Web - Detalhes do contrato",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-021",
@@ -362,6 +362,16 @@
       "durationMs": 374567,
       "startedAt": "2026-01-31T22:30:04.085Z",
       "endedAt": "2026-01-31T22:36:18.652Z"
+    },
+    {
+      "iteration": 20,
+      "status": "completed",
+      "taskId": "US-020",
+      "taskTitle": "Interface Web - Detalhes do contrato",
+      "taskCompleted": true,
+      "durationMs": 923459,
+      "startedAt": "2026-01-31T22:36:19.734Z",
+      "endedAt": "2026-01-31T22:51:43.193Z"
     }
   ],
   "skippedTaskIds": [],
