@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
+import { Route as BuscaRouteImport } from "./routes/busca"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as ContratosIndexRouteImport } from "./routes/contratos/index"
 import { Route as OrgaosAgencyIdRouteImport } from "./routes/orgaos/$agencyId"
 import { Route as FornecedoresSupplierIdRouteImport } from "./routes/fornecedores/$supplierId"
 import { Route as ContratosContractIdRouteImport } from "./routes/contratos/$contractId"
 
+const BuscaRoute = BuscaRouteImport.update({
+  id: "/busca",
+  path: "/busca",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: "/",
   path: "/",
@@ -43,6 +49,7 @@ const ContratosContractIdRoute = ContratosContractIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
+  "/busca": typeof BuscaRoute
   "/contratos/$contractId": typeof ContratosContractIdRoute
   "/fornecedores/$supplierId": typeof FornecedoresSupplierIdRoute
   "/orgaos/$agencyId": typeof OrgaosAgencyIdRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
+  "/busca": typeof BuscaRoute
   "/contratos/$contractId": typeof ContratosContractIdRoute
   "/fornecedores/$supplierId": typeof FornecedoresSupplierIdRoute
   "/orgaos/$agencyId": typeof OrgaosAgencyIdRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
+  "/busca": typeof BuscaRoute
   "/contratos/$contractId": typeof ContratosContractIdRoute
   "/fornecedores/$supplierId": typeof FornecedoresSupplierIdRoute
   "/orgaos/$agencyId": typeof OrgaosAgencyIdRoute
@@ -67,6 +76,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | "/"
+    | "/busca"
     | "/contratos/$contractId"
     | "/fornecedores/$supplierId"
     | "/orgaos/$agencyId"
@@ -74,6 +84,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
+    | "/busca"
     | "/contratos/$contractId"
     | "/fornecedores/$supplierId"
     | "/orgaos/$agencyId"
@@ -81,6 +92,7 @@ export interface FileRouteTypes {
   id:
     | "__root__"
     | "/"
+    | "/busca"
     | "/contratos/$contractId"
     | "/fornecedores/$supplierId"
     | "/orgaos/$agencyId"
@@ -89,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BuscaRoute: typeof BuscaRoute
   ContratosContractIdRoute: typeof ContratosContractIdRoute
   FornecedoresSupplierIdRoute: typeof FornecedoresSupplierIdRoute
   OrgaosAgencyIdRoute: typeof OrgaosAgencyIdRoute
@@ -97,6 +110,13 @@ export interface RootRouteChildren {
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
+    "/busca": {
+      id: "/busca"
+      path: "/busca"
+      fullPath: "/busca"
+      preLoaderRoute: typeof BuscaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/": {
       id: "/"
       path: "/"
@@ -137,6 +157,7 @@ declare module "@tanstack/react-router" {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BuscaRoute: BuscaRoute,
   ContratosContractIdRoute: ContratosContractIdRoute,
   FornecedoresSupplierIdRoute: FornecedoresSupplierIdRoute,
   OrgaosAgencyIdRoute: OrgaosAgencyIdRoute,

@@ -10,6 +10,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { contractsRouter } from "./contracts/index.js";
 import { suppliersRouter } from "./suppliers/index.js";
 import { agenciesRouter } from "./agencies/index.js";
+import { searchRouter } from "./search/index.js";
 import "dotenv/config";
 
 // Create app with OpenAPI support
@@ -24,6 +25,7 @@ app.get("/health", (c) => {
 app.route("/api/contracts", contractsRouter);
 app.route("/api/suppliers", suppliersRouter);
 app.route("/api/agencies", agenciesRouter);
+app.route("/api/search", searchRouter);
 
 // OpenAPI documentation endpoint
 app.doc("/api/docs/openapi.json", {

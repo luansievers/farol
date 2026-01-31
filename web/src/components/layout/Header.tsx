@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 
 export function Header() {
   return (
@@ -26,10 +25,7 @@ export function Header() {
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Search className="h-4 w-4" />
-            <span className="hidden sm:inline-flex">Buscar</span>
-          </Button>
+          <GlobalSearch />
         </div>
       </div>
     </header>
