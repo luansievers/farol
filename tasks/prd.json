@@ -1,7 +1,7 @@
 {
   "name": "Radar de Contratos",
-  "branchName": "ralph/radar-de-contratos",
   "description": "Infraestrutura cívica que analisa automaticamente contratos públicos da Prefeitura de São Paulo, transformando documentos técnicos em informações acessíveis com AI.",
+  "branchName": "ralph/radar-de-contratos",
   "userStories": [
     {
       "id": "US-001",
@@ -18,9 +18,10 @@
         "pnpm lint passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "",
-      "dependsOn": []
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-002",
@@ -38,7 +39,9 @@
       "priority": 2,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-001"]
+      "dependsOn": [
+        "US-001"
+      ]
     },
     {
       "id": "US-003",
@@ -56,7 +59,9 @@
       "priority": 3,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-001"]
+      "dependsOn": [
+        "US-001"
+      ]
     },
     {
       "id": "US-004",
@@ -75,7 +80,9 @@
       "priority": 4,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-002"]
+      "dependsOn": [
+        "US-002"
+      ]
     },
     {
       "id": "US-005",
@@ -94,7 +101,10 @@
       "priority": 5,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-004", "US-003"]
+      "dependsOn": [
+        "US-004",
+        "US-003"
+      ]
     },
     {
       "id": "US-006",
@@ -112,7 +122,9 @@
       "priority": 6,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-005"]
+      "dependsOn": [
+        "US-005"
+      ]
     },
     {
       "id": "US-007",
@@ -132,7 +144,9 @@
       "priority": 7,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-001"]
+      "dependsOn": [
+        "US-001"
+      ]
     },
     {
       "id": "US-008",
@@ -152,7 +166,10 @@
       "priority": 8,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-006", "US-007"]
+      "dependsOn": [
+        "US-006",
+        "US-007"
+      ]
     },
     {
       "id": "US-009",
@@ -170,7 +187,10 @@
       "priority": 9,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-007", "US-006"]
+      "dependsOn": [
+        "US-007",
+        "US-006"
+      ]
     },
     {
       "id": "US-010",
@@ -188,7 +208,9 @@
       "priority": 10,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-009"]
+      "dependsOn": [
+        "US-009"
+      ]
     },
     {
       "id": "US-011",
@@ -207,7 +229,9 @@
       "priority": 11,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-009"]
+      "dependsOn": [
+        "US-009"
+      ]
     },
     {
       "id": "US-012",
@@ -225,7 +249,9 @@
       "priority": 12,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-009"]
+      "dependsOn": [
+        "US-009"
+      ]
     },
     {
       "id": "US-013",
@@ -243,7 +269,9 @@
       "priority": 13,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-009"]
+      "dependsOn": [
+        "US-009"
+      ]
     },
     {
       "id": "US-014",
@@ -261,7 +289,12 @@
       "priority": 14,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-010", "US-011", "US-012", "US-013"]
+      "dependsOn": [
+        "US-010",
+        "US-011",
+        "US-012",
+        "US-013"
+      ]
     },
     {
       "id": "US-015",
@@ -280,7 +313,10 @@
       "priority": 15,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-014", "US-008"]
+      "dependsOn": [
+        "US-014",
+        "US-008"
+      ]
     },
     {
       "id": "US-016",
@@ -298,7 +334,9 @@
       "priority": 16,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-015"]
+      "dependsOn": [
+        "US-015"
+      ]
     },
     {
       "id": "US-017",
@@ -317,7 +355,9 @@
       "priority": 17,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-015"]
+      "dependsOn": [
+        "US-015"
+      ]
     },
     {
       "id": "US-018",
@@ -337,7 +377,9 @@
       "priority": 18,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-015"]
+      "dependsOn": [
+        "US-015"
+      ]
     },
     {
       "id": "US-019",
@@ -358,7 +400,9 @@
       "priority": 19,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-018"]
+      "dependsOn": [
+        "US-018"
+      ]
     },
     {
       "id": "US-020",
@@ -378,7 +422,10 @@
       "priority": 20,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-019", "US-016"]
+      "dependsOn": [
+        "US-019",
+        "US-016"
+      ]
     },
     {
       "id": "US-021",
@@ -397,7 +444,9 @@
       "priority": 21,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-020"]
+      "dependsOn": [
+        "US-020"
+      ]
     },
     {
       "id": "US-022",
@@ -416,7 +465,10 @@
       "priority": 22,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-019", "US-017"]
+      "dependsOn": [
+        "US-019",
+        "US-017"
+      ]
     },
     {
       "id": "US-023",
@@ -435,7 +487,10 @@
       "priority": 23,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-019", "US-017"]
+      "dependsOn": [
+        "US-019",
+        "US-017"
+      ]
     },
     {
       "id": "US-024",
@@ -454,7 +509,9 @@
       "priority": 24,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-019"]
+      "dependsOn": [
+        "US-019"
+      ]
     },
     {
       "id": "US-025",
@@ -473,7 +530,10 @@
       "priority": 25,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-014", "US-005"]
+      "dependsOn": [
+        "US-014",
+        "US-005"
+      ]
     },
     {
       "id": "US-026",
@@ -492,7 +552,14 @@
       "priority": 26,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-015", "US-016", "US-017"]
+      "dependsOn": [
+        "US-015",
+        "US-016",
+        "US-017"
+      ]
     }
-  ]
+  ],
+  "metadata": {
+    "updatedAt": "2026-01-31T20:53:32.178Z"
+  }
 }
