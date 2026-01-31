@@ -372,3 +372,160 @@ contractsRouter.openapi(getContractByIdRoute, async (c) => {
 
   return c.json(responseData, 200);
 });
+
+// ============== Similar Contracts Schemas ==============
+
+// Similar contract item schema (simplified for comparison)
+const SimilarContractSchema = z.object({
+  id: z.string(),
+  externalId: z.string(),
+  number: z.string(),
+  object: z.string(),
+  value: z.number(),
+  signatureDate: z.iso.datetime().nullable(),
+  agency: AgencySchema,
+  supplier: SupplierSchema,
+  anomalyScore: AnomalyScoreSchema.nullable(),
+});
+
+// Category statistics schema
+const CategoryStatisticsSchema = z.object({
+  count: z.number().int().nonnegative(),
+  average: z.number(),
+  median: z.number(),
+  min: z.number(),
+  max: z.number(),
+  standardDeviation: z.number(),
+});
+
+// Reference contract schema
+const ReferenceContractSchema = z.object({
+  id: z.string(),
+  value: z.number(),
+  category: ContractCategoryEnum,
+});
+
+// Similar contracts response schema
+const SimilarContractsResponseSchema = z.object({
+  referenceContract: ReferenceContractSchema,
+  similarContracts: z.array(SimilarContractSchema),
+  statistics: CategoryStatisticsSchema,
+});
+
+// Query parameters for similar contracts
+const SimilarContractsQuerySchema = z.object({
+  startDate: z.iso.datetime().optional().openapi({
+    example: "2024-01-01T00:00:00.000Z",
+    description: "Filter similar contracts from this date",
+  }),
+  endDate: z.iso.datetime().optional().openapi({
+    example: "2024-12-31T23:59:59.999Z",
+    description: "Filter similar contracts until this date",
+  }),
+});
+
+// Route: GET /api/contracts/:id/similar
+const getSimilarContractsRoute = createRoute({
+  method: "get",
+  path: "/{id}/similar",
+  tags: ["Contracts"],
+  summary: "Get similar contracts",
+  description:
+    "Returns contracts in the same category as the reference contract, with statistical comparison (average, median, min, max). Useful for benchmarking contract values.",
+  request: {
+    params: ContractIdParamSchema,
+    query: SimilarContractsQuerySchema,
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: SimilarContractsResponseSchema,
+        },
+      },
+      description:
+        "Successful response with similar contracts and category statistics",
+    },
+    404: {
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: "Reference contract not found",
+    },
+    500: {
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: "Internal server error",
+    },
+  },
+});
+
+contractsRouter.openapi(getSimilarContractsRoute, async (c) => {
+  const { id } = c.req.valid("param");
+  const query = c.req.valid("query");
+
+  const filters = {
+    startDate: query.startDate ? new Date(query.startDate) : undefined,
+    endDate: query.endDate ? new Date(query.endDate) : undefined,
+  };
+
+  const result = await contractService.getSimilarContracts(id, filters);
+
+  if (!result.success) {
+    const status = result.error.code === "NOT_FOUND" ? 404 : 500;
+    return c.json(
+      {
+        code: result.error.code as
+          | "NOT_FOUND"
+          | "INVALID_PARAMS"
+          | "DATABASE_ERROR"
+          | "INTERNAL_ERROR",
+        message: result.error.message,
+        details: result.error.details,
+      },
+      status
+    );
+  }
+
+  // Transform dates to ISO strings for JSON serialization
+  const data = result.data;
+  const responseData = {
+    referenceContract: {
+      id: data.referenceContract.id,
+      value: data.referenceContract.value,
+      category: data.referenceContract.category as
+        | "OBRAS"
+        | "SERVICOS"
+        | "TI"
+        | "SAUDE"
+        | "EDUCACAO"
+        | "OUTROS",
+    },
+    similarContracts: data.similarContracts.map((contract) => ({
+      id: contract.id,
+      externalId: contract.externalId,
+      number: contract.number,
+      object: contract.object,
+      value: contract.value,
+      signatureDate: contract.signatureDate?.toISOString() ?? null,
+      agency: contract.agency,
+      supplier: contract.supplier,
+      anomalyScore: contract.anomalyScore
+        ? {
+            totalScore: contract.anomalyScore.totalScore,
+            category: contract.anomalyScore.category,
+            breakdown: contract.anomalyScore.breakdown,
+            calculatedAt: contract.anomalyScore.calculatedAt.toISOString(),
+          }
+        : null,
+    })),
+    statistics: data.statistics,
+  };
+
+  return c.json(responseData, 200);
+});

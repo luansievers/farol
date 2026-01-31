@@ -95,6 +95,46 @@ export interface PaginatedResponse<T> {
   };
 }
 
+// Similar contracts filters
+export interface SimilarContractsFilters {
+  startDate?: Date | undefined;
+  endDate?: Date | undefined;
+}
+
+// Similar contract item DTO (simplified version for comparison)
+export interface SimilarContractDto {
+  id: string;
+  externalId: string;
+  number: string;
+  object: string;
+  value: number;
+  signatureDate: Date | null;
+  agency: AgencyDto;
+  supplier: SupplierDto;
+  anomalyScore: AnomalyScoreDto | null;
+}
+
+// Category statistics DTO
+export interface CategoryStatisticsDto {
+  count: number;
+  average: number;
+  median: number;
+  min: number;
+  max: number;
+  standardDeviation: number;
+}
+
+// Similar contracts response DTO
+export interface SimilarContractsResponseDto {
+  referenceContract: {
+    id: string;
+    value: number;
+    category: string;
+  };
+  similarContracts: SimilarContractDto[];
+  statistics: CategoryStatisticsDto;
+}
+
 // API error codes
 export type ApiErrorCode =
   | "NOT_FOUND"

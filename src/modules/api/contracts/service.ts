@@ -13,6 +13,10 @@ import type {
   PaginatedResponse,
   ApiError,
   AnomalyScoreDto,
+  SimilarContractsFilters,
+  SimilarContractsResponseDto,
+  SimilarContractDto,
+  CategoryStatisticsDto,
 } from "./types.js";
 import type {
   ScoreBreakdownItem,
@@ -146,6 +150,51 @@ function transformAnomalyScore(
   };
 }
 
+// Calculate statistics from values array
+function calculateStatistics(values: number[]): CategoryStatisticsDto {
+  if (values.length === 0) {
+    return {
+      count: 0,
+      average: 0,
+      median: 0,
+      min: 0,
+      max: 0,
+      standardDeviation: 0,
+    };
+  }
+
+  const count = values.length;
+  const sum = values.reduce((acc, val) => acc + val, 0);
+  const average = sum / count;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  // Calculate median
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(count / 2);
+  let median: number;
+  if (count % 2 !== 0) {
+    median = sorted[mid] ?? 0;
+  } else {
+    median = ((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2;
+  }
+
+  // Calculate standard deviation
+  const squaredDiffs = values.map((val) => Math.pow(val - average, 2));
+  const avgSquaredDiff =
+    squaredDiffs.reduce((acc, val) => acc + val, 0) / count;
+  const standardDeviation = Math.sqrt(avgSquaredDiff);
+
+  return {
+    count,
+    average: Math.round(average * 100) / 100,
+    median: Math.round(median * 100) / 100,
+    min,
+    max,
+    standardDeviation: Math.round(standardDeviation * 100) / 100,
+  };
+}
+
 // Contract service interface
 export interface ContractService {
   listContracts(
@@ -155,6 +204,11 @@ export interface ContractService {
   ): Promise<Result<PaginatedResponse<ContractListItemDto>, ApiError>>;
 
   getContractById(id: string): Promise<Result<ContractDetailDto, ApiError>>;
+
+  getSimilarContracts(
+    id: string,
+    filters: SimilarContractsFilters
+  ): Promise<Result<SimilarContractsResponseDto, ApiError>>;
 }
 
 // Create contract service
@@ -368,6 +422,152 @@ export function createContractService(): ContractService {
           error: {
             code: "DATABASE_ERROR",
             message: "Failed to fetch contract",
+            details: error instanceof Error ? error.message : String(error),
+          },
+        };
+      }
+    },
+
+    async getSimilarContracts(
+      id: string,
+      filters: SimilarContractsFilters
+    ): Promise<Result<SimilarContractsResponseDto, ApiError>> {
+      try {
+        // First, get the reference contract
+        const referenceContract = await prisma.contract.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            value: true,
+            category: true,
+          },
+        });
+
+        if (!referenceContract) {
+          return {
+            success: false,
+            error: {
+              code: "NOT_FOUND",
+              message: `Contract with ID ${id} not found`,
+            },
+          };
+        }
+
+        // Build where clause for similar contracts
+        const where: Prisma.ContractWhereInput = {
+          category: referenceContract.category,
+          id: { not: id }, // Exclude reference contract
+        };
+
+        // Add date filters if provided
+        if (filters.startDate || filters.endDate) {
+          where.signatureDate = {};
+          if (filters.startDate) {
+            where.signatureDate.gte = filters.startDate;
+          }
+          if (filters.endDate) {
+            where.signatureDate.lte = filters.endDate;
+          }
+        }
+
+        // Fetch similar contracts
+        const similarContracts = await prisma.contract.findMany({
+          where,
+          orderBy: { signatureDate: "desc" },
+          take: 50, // Limit to 50 similar contracts
+          select: {
+            id: true,
+            externalId: true,
+            number: true,
+            object: true,
+            value: true,
+            signatureDate: true,
+            agency: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+                acronym: true,
+              },
+            },
+            supplier: {
+              select: {
+                id: true,
+                cnpj: true,
+                tradeName: true,
+                legalName: true,
+              },
+            },
+            anomalyScore: {
+              select: {
+                totalScore: true,
+                category: true,
+                valueScore: true,
+                valueReason: true,
+                amendmentScore: true,
+                amendmentReason: true,
+                concentrationScore: true,
+                concentrationReason: true,
+                durationScore: true,
+                durationReason: true,
+                calculatedAt: true,
+              },
+            },
+          },
+        });
+
+        // Calculate statistics from all contracts in category (including reference)
+        const allCategoryContracts = await prisma.contract.findMany({
+          where: {
+            category: referenceContract.category,
+            ...(filters.startDate || filters.endDate
+              ? {
+                  signatureDate: {
+                    ...(filters.startDate ? { gte: filters.startDate } : {}),
+                    ...(filters.endDate ? { lte: filters.endDate } : {}),
+                  },
+                }
+              : {}),
+          },
+          select: { value: true },
+        });
+
+        const values = allCategoryContracts.map((c) => Number(c.value));
+        const statistics = calculateStatistics(values);
+
+        // Transform to DTOs
+        const similarContractDtos: SimilarContractDto[] = similarContracts.map(
+          (contract) => ({
+            id: contract.id,
+            externalId: contract.externalId,
+            number: contract.number,
+            object: contract.object,
+            value: Number(contract.value),
+            signatureDate: contract.signatureDate,
+            agency: contract.agency,
+            supplier: contract.supplier,
+            anomalyScore: transformAnomalyScore(contract.anomalyScore),
+          })
+        );
+
+        return {
+          success: true,
+          data: {
+            referenceContract: {
+              id: referenceContract.id,
+              value: Number(referenceContract.value),
+              category: referenceContract.category,
+            },
+            similarContracts: similarContractDtos,
+            statistics,
+          },
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: {
+            code: "DATABASE_ERROR",
+            message: "Failed to fetch similar contracts",
             details: error instanceof Error ? error.message : String(error),
           },
         };
