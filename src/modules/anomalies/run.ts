@@ -221,6 +221,108 @@ async function main() {
       break;
     }
 
+    // Concentration score commands (US-012)
+    case "concentration": {
+      const subCommand = arg1 ?? "all";
+
+      switch (subCommand) {
+        case "all": {
+          console.log("Processing all contracts for concentration score...\n");
+          const result = await service.processAllConcentrations();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "batch": {
+          console.log(
+            "Processing batch of contracts for concentration score...\n"
+          );
+          const result = await service.processConcentrationBatch();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "reset": {
+          console.log("Resetting concentration scores...\n");
+          const count = await service.resetConcentrationScores();
+          console.log(
+            `Reset concentration scores for ${String(count)} contracts`
+          );
+          break;
+        }
+
+        default: {
+          // Treat as contract ID for single calculation
+          console.log(
+            `Calculating concentration score for contract ${subCommand}...\n`
+          );
+          const result = await service.calculateConcentrationScore(subCommand);
+          if (result.success) {
+            console.log(`Score: ${String(result.data.score)}/25`);
+            console.log(`Is Anomaly: ${String(result.data.isAnomaly)}`);
+            console.log(`Reason: ${result.data.reason}`);
+            if (result.data.stats) {
+              console.log("\nStatistics:");
+              console.log(`  Agency: ${result.data.stats.agencyName}`);
+              console.log(`  Supplier: ${result.data.stats.supplierName}`);
+              console.log(
+                `  Contracts from Supplier: ${String(result.data.stats.contractCount)}`
+              );
+              console.log(
+                `  Total Agency Contracts: ${String(result.data.stats.totalAgencyContracts)}`
+              );
+              console.log(
+                `  Contract %: ${(result.data.stats.contractPercentage * 100).toFixed(1)}%`
+              );
+              console.log(
+                `  Supplier Value: R$ ${result.data.stats.supplierValue.toFixed(2)}`
+              );
+              console.log(
+                `  Total Agency Value: R$ ${result.data.stats.totalAgencyValue.toFixed(2)}`
+              );
+              console.log(
+                `  Value %: ${(result.data.stats.valuePercentage * 100).toFixed(1)}%`
+              );
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+        }
+      }
+      break;
+    }
+
+    case "concentration:recalculate": {
+      if (!arg1) {
+        console.error("Error: Contract ID required");
+        console.log(
+          "Usage: pnpm anomaly concentration:recalculate <contractId>"
+        );
+        process.exit(1);
+      }
+      console.log(
+        `Recalculating concentration score for contract ${arg1}...\n`
+      );
+      const result = await service.recalculateConcentrationScore(arg1);
+      if (result.success) {
+        console.log(
+          `Concentration Score: ${String(result.data.concentrationScore)}/25`
+        );
+        console.log(`Reason: ${result.data.concentrationReason}`);
+      } else {
+        console.error("Error:", result.error.message);
+        process.exit(1);
+      }
+      break;
+    }
+
     default:
       console.log("Anomaly Score Commands:");
       console.log("\nValue Score (US-010):");
@@ -251,6 +353,20 @@ async function main() {
       );
       console.log(
         "  amendment:recalculate <id> - Recalculate and save amendment score"
+      );
+      console.log("\nConcentration Score (US-012):");
+      console.log(
+        "  concentration all    - Process all contracts for concentration score"
+      );
+      console.log(
+        "  concentration batch  - Process a batch for concentration score"
+      );
+      console.log("  concentration reset  - Reset concentration scores");
+      console.log(
+        "  concentration <id>   - Calculate concentration score (no save)"
+      );
+      console.log(
+        "  concentration:recalculate <id> - Recalculate and save concentration score"
       );
   }
 }

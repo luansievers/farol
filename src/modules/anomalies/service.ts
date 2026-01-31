@@ -18,6 +18,9 @@ import type {
   AmendmentScoreResult,
   AmendmentStats,
   FullAnomalyScoreResult,
+  ConcentrationScoreResult,
+  ConcentrationStats,
+  FullAnomalyScoreWithConcentration,
 } from "./types/index.js";
 
 const DEFAULT_CONFIG: AnomalyConfig = {
@@ -1070,6 +1073,549 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     return calculateAmendmentScoreAndSave(contractId);
   }
 
+  // ============================================
+  // CONCENTRATION SCORE (US-012)
+  // ============================================
+
+  /**
+   * Concentration threshold: supplier with > 30% of contracts is flagged
+   */
+  const CONCENTRATION_THRESHOLD = 0.3;
+
+  /**
+   * Gets a contract with agency and supplier info for concentration calculation
+   */
+  async function getContractForConcentration(contractId: string) {
+    return prisma.contract.findUnique({
+      where: { id: contractId },
+      select: {
+        id: true,
+        externalId: true,
+        value: true,
+        category: true,
+        agencyId: true,
+        supplierId: true,
+        agency: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        supplier: {
+          select: {
+            id: true,
+            tradeName: true,
+          },
+        },
+        anomalyScore: true,
+      },
+    });
+  }
+
+  /**
+   * Gets contracts that need concentration score calculation
+   * Contracts that have an anomaly score but concentrationScore = 0 and no reason
+   */
+  async function getContractsForConcentrationScore(limit: number) {
+    return prisma.contract.findMany({
+      where: {
+        anomalyScore: {
+          concentrationScore: 0,
+          concentrationReason: null,
+        },
+        category: {
+          not: "OUTROS",
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      take: limit,
+      select: {
+        id: true,
+        externalId: true,
+        value: true,
+        agencyId: true,
+        supplierId: true,
+        agency: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        supplier: {
+          select: {
+            id: true,
+            tradeName: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Calculates supplier concentration stats for an agency
+   * Returns how much of the agency's contracts come from a specific supplier
+   */
+  async function getSupplierConcentrationInAgency(
+    agencyId: string,
+    supplierId: string,
+    agencyName: string,
+    supplierName: string
+  ): Promise<ConcentrationStats | null> {
+    // Get all contracts for this agency (excluding OUTROS category)
+    const agencyContracts = await prisma.contract.findMany({
+      where: {
+        agencyId,
+        category: {
+          not: "OUTROS",
+        },
+      },
+      select: {
+        id: true,
+        supplierId: true,
+        value: true,
+      },
+    });
+
+    if (agencyContracts.length < finalConfig.minContractsForStats) {
+      return null;
+    }
+
+    // Calculate totals for agency
+    const totalAgencyContracts = agencyContracts.length;
+    const totalAgencyValue = agencyContracts.reduce(
+      (acc, c) => acc + Number(c.value),
+      0
+    );
+
+    // Calculate totals for this supplier within the agency
+    const supplierContracts = agencyContracts.filter(
+      (c) => c.supplierId === supplierId
+    );
+    const contractCount = supplierContracts.length;
+    const supplierValue = supplierContracts.reduce(
+      (acc, c) => acc + Number(c.value),
+      0
+    );
+
+    // Calculate percentages
+    const contractPercentage =
+      totalAgencyContracts > 0 ? contractCount / totalAgencyContracts : 0;
+    const valuePercentage =
+      totalAgencyValue > 0 ? supplierValue / totalAgencyValue : 0;
+
+    return {
+      agencyId,
+      agencyName,
+      supplierId,
+      supplierName,
+      contractCount,
+      totalAgencyContracts,
+      contractPercentage,
+      supplierValue,
+      totalAgencyValue,
+      valuePercentage,
+    };
+  }
+
+  /**
+   * Calculates the concentration score for a contract
+   * Score is 0-25 based on how concentrated the supplier is within the agency
+   * Flags suppliers with > 30% of contracts (by count OR value)
+   */
+  async function calculateConcentrationScore(
+    contractId: string
+  ): Promise<Result<ConcentrationScoreResult, AnomalyError>> {
+    const contract = await getContractForConcentration(contractId);
+
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    if (contract.category === "OUTROS") {
+      return {
+        success: false,
+        error: {
+          code: "NO_CATEGORY",
+          message: "Contract must have a specific category (not OUTROS)",
+        },
+      };
+    }
+
+    // Get concentration stats
+    const stats = await getSupplierConcentrationInAgency(
+      contract.agencyId,
+      contract.supplierId,
+      contract.agency.name,
+      contract.supplier.tradeName
+    );
+
+    if (!stats) {
+      return {
+        success: true,
+        data: {
+          score: 0,
+          reason: `Insufficient contracts in agency for statistical analysis`,
+          isAnomaly: false,
+          stats: null,
+        },
+      };
+    }
+
+    // Check if concentration exceeds threshold (30%)
+    const isContractCountAnomaly =
+      stats.contractPercentage > CONCENTRATION_THRESHOLD;
+    const isValueAnomaly = stats.valuePercentage > CONCENTRATION_THRESHOLD;
+    const isAnomaly = isContractCountAnomaly || isValueAnomaly;
+
+    // Calculate score (0-25)
+    let score = 0;
+    if (isAnomaly) {
+      // Use the higher percentage for scoring
+      const maxPercentage = Math.max(
+        stats.contractPercentage,
+        stats.valuePercentage
+      );
+
+      // Map percentage to score:
+      // 30% = 5 points, 50% = 12 points, 70%+ = 25 points
+      const excessPercentage = maxPercentage - CONCENTRATION_THRESHOLD;
+      score = Math.min(
+        finalConfig.maxScore,
+        Math.round(5 + excessPercentage * 50)
+      );
+    }
+
+    // Build reason string
+    let reason: string;
+    if (isAnomaly) {
+      const percentByCount = Math.round(stats.contractPercentage * 100);
+      const percentByValue = Math.round(stats.valuePercentage * 100);
+
+      const parts: string[] = [];
+
+      if (isContractCountAnomaly) {
+        parts.push(
+          `Supplier ${stats.supplierName} has ${String(percentByCount)}% of contracts from ${stats.agencyName}`
+        );
+      }
+
+      if (isValueAnomaly && !isContractCountAnomaly) {
+        // Only mention value if count wasn't already flagged
+        parts.push(
+          `Supplier ${stats.supplierName} has ${String(percentByValue)}% of contract value from ${stats.agencyName}`
+        );
+      } else if (isValueAnomaly && isContractCountAnomaly && parts[0]) {
+        // Add value info as additional context
+        parts[0] = `${parts[0]} (${String(percentByValue)}% by value)`;
+      }
+
+      reason = parts.join("; ");
+    } else {
+      const percentByCount = Math.round(stats.contractPercentage * 100);
+      reason = `Supplier has ${String(percentByCount)}% of agency contracts (within normal range)`;
+    }
+
+    return {
+      success: true,
+      data: {
+        score,
+        reason,
+        isAnomaly,
+        stats,
+      },
+    };
+  }
+
+  /**
+   * Calculates concentration score and saves to database
+   */
+  async function calculateConcentrationScoreAndSave(
+    contractId: string
+  ): Promise<Result<FullAnomalyScoreWithConcentration, AnomalyError>> {
+    const result = await calculateConcentrationScore(contractId);
+
+    if (!result.success) {
+      return result;
+    }
+
+    const contract = await getContractForConcentration(contractId);
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    if (!contract.anomalyScore) {
+      return {
+        success: false,
+        error: {
+          code: "CALCULATION_FAILED",
+          message: `Contract ${contractId} has no anomaly score record. Run value score calculation first.`,
+        },
+      };
+    }
+
+    try {
+      // Update anomaly score with concentration data
+      const currentValueScore = contract.anomalyScore.valueScore;
+      const currentAmendmentScore = contract.anomalyScore.amendmentScore;
+      const currentDurationScore = contract.anomalyScore.durationScore;
+      const newTotalScore =
+        currentValueScore +
+        currentAmendmentScore +
+        result.data.score +
+        currentDurationScore;
+      const newCategory =
+        newTotalScore > 50 ? "HIGH" : newTotalScore > 25 ? "MEDIUM" : "LOW";
+
+      await prisma.anomalyScore.update({
+        where: { contractId },
+        data: {
+          concentrationScore: result.data.score,
+          concentrationReason: result.data.reason,
+          totalScore: newTotalScore,
+          category: newCategory,
+        },
+      });
+
+      console.log(
+        `[Anomaly] ${contract.externalId}: Concentration score ${String(result.data.score)}/25 - ${result.data.reason}`
+      );
+
+      return {
+        success: true,
+        data: {
+          contractId,
+          valueScore: currentValueScore,
+          valueReason: contract.anomalyScore.valueReason ?? "",
+          amendmentScore: currentAmendmentScore,
+          amendmentReason: contract.anomalyScore.amendmentReason ?? "",
+          concentrationScore: result.data.score,
+          concentrationReason: result.data.reason,
+        },
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          code: "DATABASE_ERROR",
+          message: err instanceof Error ? err.message : "Database error",
+          details: err,
+        },
+      };
+    }
+  }
+
+  /**
+   * Process a batch of contracts for concentration score
+   */
+  async function processConcentrationBatch(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log(
+      `[Anomaly] Starting concentration score batch (batch size: ${String(finalConfig.batchSize)})`
+    );
+
+    const contracts = await getContractsForConcentrationScore(
+      finalConfig.batchSize
+    );
+
+    if (contracts.length === 0) {
+      console.log(
+        "[Anomaly] No contracts pending concentration score calculation"
+      );
+      stats.finishedAt = new Date();
+      return { success: true, data: stats };
+    }
+
+    console.log(
+      `[Anomaly] Found ${String(contracts.length)} contracts to process for concentration score`
+    );
+
+    for (const contract of contracts) {
+      const result = await calculateConcentrationScoreAndSave(contract.id);
+      stats.processed++;
+
+      if (result.success) {
+        stats.calculated++;
+        if (result.data.concentrationScore > 0) {
+          stats.anomaliesFound++;
+        }
+      } else {
+        stats.errors++;
+        stats.lastError = result.error.message;
+        console.error(
+          `[Anomaly] Error calculating concentration score for ${contract.externalId}: ${result.error.message}`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Concentration batch completed:");
+    console.log(`  - Processed: ${String(stats.processed)}`);
+    console.log(`  - Calculated: ${String(stats.calculated)}`);
+    console.log(`  - Anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Process all pending contracts for concentration score
+   */
+  async function processAllConcentrations(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log("[Anomaly] Starting full concentration score processing run");
+
+    let hasMore = true;
+
+    while (hasMore) {
+      const batchResult = await processConcentrationBatch();
+
+      if (!batchResult.success) {
+        stats.lastError = batchResult.error.message;
+        stats.finishedAt = new Date();
+        return { success: false, error: batchResult.error };
+      }
+
+      const batchStats = batchResult.data;
+      stats.processed += batchStats.processed;
+      stats.calculated += batchStats.calculated;
+      stats.anomaliesFound += batchStats.anomaliesFound;
+      stats.errors += batchStats.errors;
+
+      if (batchStats.lastError) {
+        stats.lastError = batchStats.lastError;
+      }
+
+      // Check if there are more contracts to process
+      const remaining = await prisma.anomalyScore.count({
+        where: {
+          concentrationScore: 0,
+          concentrationReason: null,
+          contract: {
+            category: {
+              not: "OUTROS",
+            },
+          },
+        },
+      });
+
+      hasMore = remaining > 0;
+
+      if (hasMore) {
+        console.log(
+          `[Anomaly] ${String(remaining)} contracts remaining for concentration score`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Full concentration processing completed:");
+    console.log(`  - Total processed: ${String(stats.processed)}`);
+    console.log(`  - Total calculated: ${String(stats.calculated)}`);
+    console.log(`  - Total anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Total errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Reset concentration scores for recalculation
+   */
+  async function resetConcentrationScores(): Promise<number> {
+    // Get all anomaly scores to recalculate totals
+    const scores = await prisma.anomalyScore.findMany({
+      select: {
+        contractId: true,
+        valueScore: true,
+        amendmentScore: true,
+        durationScore: true,
+      },
+    });
+
+    // Update each score individually to recalculate total
+    let count = 0;
+    for (const score of scores) {
+      const newTotal =
+        score.valueScore + score.amendmentScore + score.durationScore;
+      const newCategory =
+        newTotal > 50 ? "HIGH" : newTotal > 25 ? "MEDIUM" : "LOW";
+
+      await prisma.anomalyScore.update({
+        where: { contractId: score.contractId },
+        data: {
+          concentrationScore: 0,
+          concentrationReason: null,
+          totalScore: newTotal,
+          category: newCategory,
+        },
+      });
+      count++;
+    }
+
+    console.log(
+      `[Anomaly] Reset concentration scores for ${String(count)} contracts`
+    );
+    return count;
+  }
+
+  /**
+   * Recalculate concentration score for a specific contract
+   */
+  async function recalculateConcentrationScore(
+    contractId: string
+  ): Promise<Result<FullAnomalyScoreWithConcentration, AnomalyError>> {
+    const contract = await getContractForConcentration(contractId);
+
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    return calculateConcentrationScoreAndSave(contractId);
+  }
+
   return {
     // Value score (US-010)
     calculateValueScore,
@@ -1089,6 +1635,14 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     processAllAmendments,
     resetAmendmentScores,
     recalculateAmendmentScore,
+    // Concentration score (US-012)
+    calculateConcentrationScore,
+    calculateConcentrationScoreAndSave,
+    getSupplierConcentrationInAgency,
+    processConcentrationBatch,
+    processAllConcentrations,
+    resetConcentrationScores,
+    recalculateConcentrationScore,
     config: finalConfig,
   };
 }

@@ -81,6 +81,39 @@ export interface FullAnomalyScoreResult {
   amendmentReason: string;
 }
 
+// Concentration score calculation result (US-012)
+export interface ConcentrationScoreResult {
+  score: number; // 0-25
+  reason: string;
+  isAnomaly: boolean;
+  stats: ConcentrationStats | null;
+}
+
+// Statistics for supplier concentration in an agency
+export interface ConcentrationStats {
+  agencyId: string;
+  agencyName: string;
+  supplierId: string;
+  supplierName: string;
+  contractCount: number; // Contracts from this supplier
+  totalAgencyContracts: number; // Total contracts in agency
+  contractPercentage: number; // % of contracts from this supplier
+  supplierValue: number; // Total value from this supplier
+  totalAgencyValue: number; // Total value in agency
+  valuePercentage: number; // % of value from this supplier
+}
+
+// Full anomaly score result with concentration
+export interface FullAnomalyScoreWithConcentration {
+  contractId: string;
+  valueScore: number;
+  valueReason: string;
+  amendmentScore: number;
+  amendmentReason: string;
+  concentrationScore: number;
+  concentrationReason: string;
+}
+
 // Service stats
 export interface AnomalyStats {
   startedAt: Date;
