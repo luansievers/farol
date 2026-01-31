@@ -52,6 +52,9 @@
     "anomaly:reset:all": "tsx src/modules/anomalies/run.ts reset all",
     "anomaly:recalculate": "tsx src/modules/anomalies/run.ts recalculate",
     "anomaly:single": "tsx src/modules/anomalies/run.ts single",
+    "auto-update": "tsx src/modules/auto-update/run.ts run",
+    "auto-update:start": "tsx src/modules/auto-update/run.ts start",
+    "auto-update:stats": "tsx src/modules/auto-update/run.ts stats",
     "api": "tsx src/modules/api/server.ts",
     "api:dev": "tsx watch src/modules/api/server.ts"
   },
