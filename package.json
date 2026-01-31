@@ -44,7 +44,14 @@
     "classify:stats": "tsx src/modules/classification/run.ts stats",
     "classify:reset": "tsx src/modules/classification/run.ts reset",
     "classify:set": "tsx src/modules/classification/run.ts set",
-    "classify:reclassify": "tsx src/modules/classification/run.ts reclassify"
+    "classify:reclassify": "tsx src/modules/classification/run.ts reclassify",
+    "anomaly": "tsx src/modules/anomalies/run.ts all",
+    "anomaly:batch": "tsx src/modules/anomalies/run.ts batch",
+    "anomaly:stats": "tsx src/modules/anomalies/run.ts stats",
+    "anomaly:reset": "tsx src/modules/anomalies/run.ts reset",
+    "anomaly:reset:all": "tsx src/modules/anomalies/run.ts reset all",
+    "anomaly:recalculate": "tsx src/modules/anomalies/run.ts recalculate",
+    "anomaly:single": "tsx src/modules/anomalies/run.ts single"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
