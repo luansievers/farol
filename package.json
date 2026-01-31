@@ -51,7 +51,9 @@
     "anomaly:reset": "tsx src/modules/anomalies/run.ts reset",
     "anomaly:reset:all": "tsx src/modules/anomalies/run.ts reset all",
     "anomaly:recalculate": "tsx src/modules/anomalies/run.ts recalculate",
-    "anomaly:single": "tsx src/modules/anomalies/run.ts single"
+    "anomaly:single": "tsx src/modules/anomalies/run.ts single",
+    "api": "tsx src/modules/api/server.ts",
+    "api:dev": "tsx watch src/modules/api/server.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -82,11 +84,16 @@
     "@anthropic-ai/sdk": "^0.72.1",
     "@aws-sdk/client-s3": "^3.980.0",
     "@aws-sdk/s3-request-presigner": "^3.980.0",
+    "@hono/node-server": "^1.19.9",
+    "@hono/swagger-ui": "^0.5.3",
+    "@hono/zod-openapi": "^1.2.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "dotenv": "^17.2.3",
+    "hono": "^4.11.7",
     "openai": "^6.17.0",
     "pdf-parse": "^2.4.5",
-    "tesseract.js": "^7.0.0"
+    "tesseract.js": "^7.0.0",
+    "zod": "^4.3.6"
   }
 }
