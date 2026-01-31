@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T21:20:43.601Z",
-  "currentIteration": 4,
+  "updatedAt": "2026-01-31T21:26:26.261Z",
+  "currentIteration": 5,
   "maxIterations": 10,
-  "tasksCompleted": 4,
+  "tasksCompleted": 5,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -41,8 +41,8 @@
       {
         "id": "US-005",
         "title": "Crawler do Portal de Transparência SP - Detalhes e PDFs",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-006",
@@ -212,6 +212,16 @@
       "durationMs": 463434,
       "startedAt": "2026-01-31T21:06:41.082Z",
       "endedAt": "2026-01-31T21:14:24.516Z"
+    },
+    {
+      "iteration": 5,
+      "status": "completed",
+      "taskId": "US-005",
+      "taskTitle": "Crawler do Portal de Transparência SP - Detalhes e PDFs",
+      "taskCompleted": true,
+      "durationMs": 378006,
+      "startedAt": "2026-01-31T21:14:25.593Z",
+      "endedAt": "2026-01-31T21:20:43.599Z"
     }
   ],
   "skippedTaskIds": [],
