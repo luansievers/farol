@@ -232,3 +232,42 @@ export interface YearlyContractData {
   contractCount: number;
   totalValue: number;
 }
+
+// Agency DTOs
+export interface AgencyMetricsDto {
+  totalContracts: number;
+  totalValue: number;
+  averageScore: number | null;
+}
+
+export interface AgencyContractDto {
+  id: string;
+  externalId: string;
+  number: string;
+  object: string;
+  value: number;
+  category: ContractCategory;
+  status: ContractStatus;
+  signatureDate: string | null;
+  supplier: SupplierDto;
+  anomalyScore: AnomalyScoreDto | null;
+}
+
+export interface AgencyDetailDto {
+  id: string;
+  code: string;
+  name: string;
+  acronym: string | null;
+  metrics: AgencyMetricsDto;
+  contracts: AgencyContractDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Computed metrics for agency page
+export interface SupplierConcentration {
+  supplier: SupplierDto;
+  contractCount: number;
+  totalValue: number;
+  percentage: number;
+}
