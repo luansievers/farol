@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T21:06:40.002Z",
-  "currentIteration": 2,
+  "updatedAt": "2026-01-31T21:14:24.518Z",
+  "currentIteration": 3,
   "maxIterations": 10,
-  "tasksCompleted": 2,
+  "tasksCompleted": 3,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -29,8 +29,8 @@
       {
         "id": "US-003",
         "title": "Configuração de cloud storage para documentos",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-004",
@@ -192,6 +192,16 @@
       "durationMs": 384259,
       "startedAt": "2026-01-31T20:53:33.271Z",
       "endedAt": "2026-01-31T20:59:57.530Z"
+    },
+    {
+      "iteration": 3,
+      "status": "completed",
+      "taskId": "US-003",
+      "taskTitle": "Configuração de cloud storage para documentos",
+      "taskCompleted": true,
+      "durationMs": 401378,
+      "startedAt": "2026-01-31T20:59:58.622Z",
+      "endedAt": "2026-01-31T21:06:40.000Z"
     }
   ],
   "skippedTaskIds": [],
