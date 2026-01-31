@@ -8,6 +8,8 @@ import { serve } from "@hono/node-server";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
 import { contractsRouter } from "./contracts/index.js";
+import { suppliersRouter } from "./suppliers/index.js";
+import { agenciesRouter } from "./agencies/index.js";
 import "dotenv/config";
 
 // Create app with OpenAPI support
@@ -18,8 +20,10 @@ app.get("/health", (c) => {
   return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Mount contracts router
+// Mount API routers
 app.route("/api/contracts", contractsRouter);
+app.route("/api/suppliers", suppliersRouter);
+app.route("/api/agencies", agenciesRouter);
 
 // OpenAPI documentation endpoint
 app.doc("/api/docs/openapi.json", {
