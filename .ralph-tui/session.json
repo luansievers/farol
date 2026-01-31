@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T23:11:23.577Z",
-  "currentIteration": 22,
+  "updatedAt": "2026-01-31T23:19:44.801Z",
+  "currentIteration": 23,
   "maxIterations": 10,
-  "tasksCompleted": 22,
+  "tasksCompleted": 23,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -149,8 +149,8 @@
       {
         "id": "US-023",
         "title": "Interface Web - Página de órgão",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-024",
@@ -392,6 +392,16 @@
       "durationMs": 408866,
       "startedAt": "2026-01-31T22:58:47.474Z",
       "endedAt": "2026-01-31T23:05:36.340Z"
+    },
+    {
+      "iteration": 23,
+      "status": "completed",
+      "taskId": "US-023",
+      "taskTitle": "Interface Web - Página de órgão",
+      "taskCompleted": true,
+      "durationMs": 346137,
+      "startedAt": "2026-01-31T23:05:37.437Z",
+      "endedAt": "2026-01-31T23:11:23.574Z"
     }
   ],
   "skippedTaskIds": [],
