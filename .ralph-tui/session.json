@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T20:53:32.179Z",
-  "currentIteration": 0,
+  "updatedAt": "2026-01-31T20:59:57.540Z",
+  "currentIteration": 1,
   "maxIterations": 10,
-  "tasksCompleted": 0,
+  "tasksCompleted": 1,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -17,8 +17,8 @@
       {
         "id": "US-001",
         "title": "Setup do projeto e estrutura base",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-002",
@@ -172,9 +172,20 @@
       }
     ]
   },
-  "iterations": [],
+  "iterations": [
+    {
+      "iteration": 1,
+      "status": "completed",
+      "taskId": "US-001",
+      "taskTitle": "Setup do projeto e estrutura base",
+      "taskCompleted": true,
+      "durationMs": 142838,
+      "startedAt": "2026-01-31T20:51:09.339Z",
+      "endedAt": "2026-01-31T20:53:32.177Z"
+    }
+  ],
   "skippedTaskIds": [],
   "cwd": "/Users/luansievers/Documents/dev/farol",
   "activeTaskIds": [],
-  "subagentPanelVisible": false
+  "subagentPanelVisible": true
 }

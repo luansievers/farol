@@ -37,11 +37,12 @@
         "pnpm lint passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "",
       "dependsOn": [
         "US-001"
-      ]
+      ],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-003",
@@ -366,6 +367,7 @@
       "acceptanceCriteria": [
         "Framework React com Vite ou Next.js",
         "TailwindCSS configurado",
+        "Shadcn/UI configurado",
         "Componentes base: Layout, Header, Footer",
         "Roteamento configurado",
         "Integração com API (fetch/axios configurado)",
@@ -560,6 +562,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-01-31T20:53:32.178Z"
+    "updatedAt": "2026-01-31T20:59:57.533Z"
   }
 }
