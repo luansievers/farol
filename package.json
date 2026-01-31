@@ -22,7 +22,10 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "crawler": "tsx src/modules/crawler/run.ts",
+    "crawler:week": "tsx src/modules/crawler/run.ts 7",
+    "crawler:month": "tsx src/modules/crawler/run.ts 30"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
