@@ -95,6 +95,18 @@ export interface PaginatedResponse<T> {
   };
 }
 
+// Amendment DTO
+export interface AmendmentDto {
+  id: string;
+  externalId: string;
+  number: number;
+  type: string;
+  description: string | null;
+  valueChange: number | null;
+  durationChange: number | null;
+  signatureDate: Date | null;
+}
+
 // Similar contracts filters
 export interface SimilarContractsFilters {
   startDate?: Date | undefined;

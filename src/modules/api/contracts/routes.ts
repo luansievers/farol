@@ -529,3 +529,92 @@ contractsRouter.openapi(getSimilarContractsRoute, async (c) => {
 
   return c.json(responseData, 200);
 });
+
+// ============== Amendments Schemas ==============
+
+// Amendment schema
+const AmendmentSchema = z.object({
+  id: z.string(),
+  externalId: z.string(),
+  number: z.number().int(),
+  type: z.string(),
+  description: z.string().nullable(),
+  valueChange: z.number().nullable(),
+  durationChange: z.number().int().nullable(),
+  signatureDate: z.iso.datetime().nullable(),
+});
+
+// Route: GET /api/contracts/:id/amendments
+const getContractAmendmentsRoute = createRoute({
+  method: "get",
+  path: "/{id}/amendments",
+  tags: ["Contracts"],
+  summary: "Get contract amendments",
+  description:
+    "Returns all amendments (aditivos) for a specific contract, ordered by number",
+  request: {
+    params: ContractIdParamSchema,
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.array(AmendmentSchema),
+        },
+      },
+      description: "Successful response with contract amendments",
+    },
+    404: {
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: "Contract not found",
+    },
+    500: {
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: "Internal server error",
+    },
+  },
+});
+
+contractsRouter.openapi(getContractAmendmentsRoute, async (c) => {
+  const { id } = c.req.valid("param");
+
+  const result = await contractService.getContractAmendments(id);
+
+  if (!result.success) {
+    const status = result.error.code === "NOT_FOUND" ? 404 : 500;
+    return c.json(
+      {
+        code: result.error.code as
+          | "NOT_FOUND"
+          | "INVALID_PARAMS"
+          | "DATABASE_ERROR"
+          | "INTERNAL_ERROR",
+        message: result.error.message,
+        details: result.error.details,
+      },
+      status
+    );
+  }
+
+  // Transform dates to ISO strings for JSON serialization
+  const responseData = result.data.map((amendment) => ({
+    id: amendment.id,
+    externalId: amendment.externalId,
+    number: amendment.number,
+    type: amendment.type,
+    description: amendment.description,
+    valueChange: amendment.valueChange,
+    durationChange: amendment.durationChange,
+    signatureDate: amendment.signatureDate?.toISOString() ?? null,
+  }));
+
+  return c.json(responseData, 200);
+});

@@ -17,6 +17,7 @@ import type {
   SimilarContractsResponseDto,
   SimilarContractDto,
   CategoryStatisticsDto,
+  AmendmentDto,
 } from "./types.js";
 import type {
   ScoreBreakdownItem,
@@ -209,6 +210,10 @@ export interface ContractService {
     id: string,
     filters: SimilarContractsFilters
   ): Promise<Result<SimilarContractsResponseDto, ApiError>>;
+
+  getContractAmendments(
+    contractId: string
+  ): Promise<Result<AmendmentDto[], ApiError>>;
 }
 
 // Create contract service
@@ -568,6 +573,66 @@ export function createContractService(): ContractService {
           error: {
             code: "DATABASE_ERROR",
             message: "Failed to fetch similar contracts",
+            details: error instanceof Error ? error.message : String(error),
+          },
+        };
+      }
+    },
+
+    async getContractAmendments(
+      contractId: string
+    ): Promise<Result<AmendmentDto[], ApiError>> {
+      try {
+        // Check if contract exists
+        const contract = await prisma.contract.findUnique({
+          where: { id: contractId },
+          select: { id: true },
+        });
+
+        if (!contract) {
+          return {
+            success: false,
+            error: {
+              code: "NOT_FOUND",
+              message: `Contract with ID ${contractId} not found`,
+            },
+          };
+        }
+
+        const amendments = await prisma.amendment.findMany({
+          where: { contractId },
+          orderBy: { number: "asc" },
+          select: {
+            id: true,
+            externalId: true,
+            number: true,
+            type: true,
+            description: true,
+            valueChange: true,
+            durationChange: true,
+            signatureDate: true,
+          },
+        });
+
+        return {
+          success: true,
+          data: amendments.map((a) => ({
+            id: a.id,
+            externalId: a.externalId,
+            number: a.number,
+            type: a.type,
+            description: a.description,
+            valueChange: a.valueChange ? Number(a.valueChange) : null,
+            durationChange: a.durationChange,
+            signatureDate: a.signatureDate,
+          })),
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: {
+            code: "DATABASE_ERROR",
+            message: "Failed to fetch contract amendments",
             details: error instanceof Error ? error.message : String(error),
           },
         };

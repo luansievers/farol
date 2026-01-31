@@ -2,8 +2,11 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type {
   ContractListItemDto,
+  ContractDetailDto,
   ContractListParams,
   PaginatedResponse,
+  AmendmentDto,
+  SimilarContractsResponseDto,
 } from "@/lib/types";
 
 export const contractKeys = {
@@ -13,6 +16,8 @@ export const contractKeys = {
     [...contractKeys.lists(), params] as const,
   details: () => [...contractKeys.all, "detail"] as const,
   detail: (id: string) => [...contractKeys.details(), id] as const,
+  amendments: (id: string) => [...contractKeys.detail(id), "amendments"] as const,
+  similar: (id: string) => [...contractKeys.detail(id), "similar"] as const,
 };
 
 async function fetchContracts(
@@ -43,5 +48,51 @@ export function useContracts(params: ContractListParams = {}) {
     queryKey: contractKeys.list(params),
     queryFn: () => fetchContracts(params),
     placeholderData: keepPreviousData,
+  });
+}
+
+// Fetch single contract detail
+async function fetchContractDetail(id: string): Promise<ContractDetailDto> {
+  const response = await api.get<ContractDetailDto>(`/contracts/${id}`);
+  return response.data;
+}
+
+export function useContractDetail(id: string) {
+  return useQuery({
+    queryKey: contractKeys.detail(id),
+    queryFn: () => fetchContractDetail(id),
+    enabled: !!id,
+  });
+}
+
+// Fetch contract amendments
+async function fetchContractAmendments(id: string): Promise<AmendmentDto[]> {
+  const response = await api.get<AmendmentDto[]>(`/contracts/${id}/amendments`);
+  return response.data;
+}
+
+export function useContractAmendments(id: string) {
+  return useQuery({
+    queryKey: contractKeys.amendments(id),
+    queryFn: () => fetchContractAmendments(id),
+    enabled: !!id,
+  });
+}
+
+// Fetch similar contracts
+async function fetchSimilarContracts(
+  id: string
+): Promise<SimilarContractsResponseDto> {
+  const response = await api.get<SimilarContractsResponseDto>(
+    `/contracts/${id}/similar`
+  );
+  return response.data;
+}
+
+export function useSimilarContracts(id: string) {
+  return useQuery({
+    queryKey: contractKeys.similar(id),
+    queryFn: () => fetchSimilarContracts(id),
+    enabled: !!id,
   });
 }

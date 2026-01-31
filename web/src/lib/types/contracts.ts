@@ -111,6 +111,50 @@ export interface ContractDetailDto extends ContractListItemDto {
   updatedAt: string;
 }
 
+// Amendment DTO
+export interface AmendmentDto {
+  id: string;
+  externalId: string;
+  number: number;
+  type: string;
+  description: string | null;
+  valueChange: number | null;
+  durationChange: number | null;
+  signatureDate: string | null;
+}
+
+// Similar contracts response
+export interface SimilarContractDto {
+  id: string;
+  externalId: string;
+  number: string;
+  object: string;
+  value: number;
+  signatureDate: string | null;
+  agency: AgencyDto;
+  supplier: SupplierDto;
+  anomalyScore: AnomalyScoreDto | null;
+}
+
+export interface CategoryStatisticsDto {
+  count: number;
+  average: number;
+  median: number;
+  min: number;
+  max: number;
+  standardDeviation: number;
+}
+
+export interface SimilarContractsResponseDto {
+  referenceContract: {
+    id: string;
+    value: number;
+    category: ContractCategory;
+  };
+  similarContracts: SimilarContractDto[];
+  statistics: CategoryStatisticsDto;
+}
+
 // Pagination
 export interface PaginationInfo {
   page: number;
