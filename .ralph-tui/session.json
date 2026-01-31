@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T21:54:28.384Z",
-  "currentIteration": 10,
+  "updatedAt": "2026-01-31T21:57:35.070Z",
+  "currentIteration": 11,
   "maxIterations": 10,
-  "tasksCompleted": 10,
+  "tasksCompleted": 11,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -77,8 +77,8 @@
       {
         "id": "US-011",
         "title": "Cálculo do score de anomalia - Aditivos",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-012",
@@ -272,6 +272,16 @@
       "durationMs": 256654,
       "startedAt": "2026-01-31T21:45:44.790Z",
       "endedAt": "2026-01-31T21:50:01.444Z"
+    },
+    {
+      "iteration": 11,
+      "status": "completed",
+      "taskId": "US-011",
+      "taskTitle": "Cálculo do score de anomalia - Aditivos",
+      "taskCompleted": true,
+      "durationMs": 265856,
+      "startedAt": "2026-01-31T21:50:02.526Z",
+      "endedAt": "2026-01-31T21:54:28.382Z"
     }
   ],
   "skippedTaskIds": [],
