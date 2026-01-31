@@ -38,7 +38,13 @@
     "summary:batch": "tsx src/modules/summary/run.ts batch",
     "summary:stats": "tsx src/modules/summary/run.ts stats",
     "summary:reset": "tsx src/modules/summary/run.ts reset",
-    "summary:regen": "tsx src/modules/summary/run.ts regen"
+    "summary:regen": "tsx src/modules/summary/run.ts regen",
+    "classify": "tsx src/modules/classification/run.ts all",
+    "classify:batch": "tsx src/modules/classification/run.ts batch",
+    "classify:stats": "tsx src/modules/classification/run.ts stats",
+    "classify:reset": "tsx src/modules/classification/run.ts reset",
+    "classify:set": "tsx src/modules/classification/run.ts set",
+    "classify:reclassify": "tsx src/modules/classification/run.ts reclassify"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
