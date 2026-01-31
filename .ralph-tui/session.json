@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T20:59:57.540Z",
-  "currentIteration": 1,
+  "updatedAt": "2026-01-31T21:06:40.002Z",
+  "currentIteration": 2,
   "maxIterations": 10,
-  "tasksCompleted": 1,
+  "tasksCompleted": 2,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -23,8 +23,8 @@
       {
         "id": "US-002",
         "title": "Configuração do banco de dados PostgreSQL",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-003",
@@ -182,6 +182,16 @@
       "durationMs": 142838,
       "startedAt": "2026-01-31T20:51:09.339Z",
       "endedAt": "2026-01-31T20:53:32.177Z"
+    },
+    {
+      "iteration": 2,
+      "status": "completed",
+      "taskId": "US-002",
+      "taskTitle": "Configuração do banco de dados PostgreSQL",
+      "taskCompleted": true,
+      "durationMs": 384259,
+      "startedAt": "2026-01-31T20:53:33.271Z",
+      "endedAt": "2026-01-31T20:59:57.530Z"
     }
   ],
   "skippedTaskIds": [],
