@@ -3,10 +3,10 @@
   "sessionId": "09c7a2cc-4d4b-4cb6-8452-f5ee8b999f6e",
   "status": "running",
   "startedAt": "2026-01-31T20:50:31.666Z",
-  "updatedAt": "2026-01-31T21:45:43.703Z",
-  "currentIteration": 8,
+  "updatedAt": "2026-01-31T21:50:01.447Z",
+  "currentIteration": 9,
   "maxIterations": 10,
-  "tasksCompleted": 8,
+  "tasksCompleted": 9,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -65,8 +65,8 @@
       {
         "id": "US-009",
         "title": "Classificação automática de contratos",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-010",
@@ -252,6 +252,16 @@
       "durationMs": 367986,
       "startedAt": "2026-01-31T21:33:12.681Z",
       "endedAt": "2026-01-31T21:39:20.667Z"
+    },
+    {
+      "iteration": 9,
+      "status": "completed",
+      "taskId": "US-009",
+      "taskTitle": "Classificação automática de contratos",
+      "taskCompleted": true,
+      "durationMs": 381941,
+      "startedAt": "2026-01-31T21:39:21.760Z",
+      "endedAt": "2026-01-31T21:45:43.701Z"
     }
   ],
   "skippedTaskIds": [],
