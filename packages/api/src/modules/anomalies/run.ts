@@ -438,13 +438,13 @@ async function main() {
           const stats = await service.getConsolidatedStats();
           console.log(`Total Contracts: ${String(stats.total)}`);
           console.log(
-            `Average Score: ${stats.averageTotalScore.toFixed(2)}/100`
+            `Average Score: ${stats.averageTotalScore.toFixed(2)}/200`
           );
           console.log(`With Anomalies: ${String(stats.withAnomalies)}`);
           console.log("\nBy Category:");
-          console.log(`  LOW (0-30): ${String(stats.byCategory.LOW)}`);
-          console.log(`  MEDIUM (31-60): ${String(stats.byCategory.MEDIUM)}`);
-          console.log(`  HIGH (61-100): ${String(stats.byCategory.HIGH)}`);
+          console.log(`  LOW (0-50): ${String(stats.byCategory.LOW)}`);
+          console.log(`  MEDIUM (51-100): ${String(stats.byCategory.MEDIUM)}`);
+          console.log(`  HIGH (101-200): ${String(stats.byCategory.HIGH)}`);
           console.log("\nBy Criterion (contracts with score > 0):");
           console.log(`  Value: ${String(stats.byCriterion.value)}`);
           console.log(`  Amendment: ${String(stats.byCriterion.amendment)}`);
@@ -452,6 +452,10 @@ async function main() {
             `  Concentration: ${String(stats.byCriterion.concentration)}`
           );
           console.log(`  Duration: ${String(stats.byCriterion.duration)}`);
+          console.log(`  Timing: ${String(stats.byCriterion.timing)}`);
+          console.log(`  Round Number: ${String(stats.byCriterion.roundNumber)}`);
+          console.log(`  Fragmentation: ${String(stats.byCriterion.fragmentation)}`);
+          console.log(`  Description: ${String(stats.byCriterion.description)}`);
           break;
         }
 
@@ -564,6 +568,229 @@ async function main() {
       break;
     }
 
+    // Round Number score commands
+    case "roundnumber": {
+      const subCommand = arg1 ?? "all";
+
+      switch (subCommand) {
+        case "all": {
+          console.log("Processing all contracts for round number score...\n");
+          const result = await service.processAllRoundNumbers();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "batch": {
+          console.log("Processing batch of contracts for round number score...\n");
+          const result = await service.processRoundNumberBatch();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "reset": {
+          console.log("Resetting round number scores...\n");
+          const count = await service.resetRoundNumberScores();
+          console.log(`Reset round number scores for ${String(count)} contracts`);
+          break;
+        }
+
+        default: {
+          console.log(`Calculating round number score for contract ${subCommand}...\n`);
+          const result = await service.calculateRoundNumberScore(subCommand);
+          if (result.success) {
+            console.log(`Score: ${String(result.data.score)}/25`);
+            console.log(`Is Anomaly: ${String(result.data.isAnomaly)}`);
+            console.log(`Reason: ${result.data.reason}`);
+            if (result.data.stats) {
+              console.log("\nStatistics:");
+              console.log(`  Value: R$ ${result.data.stats.value.toLocaleString("pt-BR")}`);
+              console.log(`  Multiple of 100k: ${String(result.data.stats.isMultipleOf100k)}`);
+              console.log(`  Multiple of 10k: ${String(result.data.stats.isMultipleOf10k)}`);
+              console.log(`  Multiple of 1k: ${String(result.data.stats.isMultipleOf1k)}`);
+              console.log(`  Has No Cents: ${String(result.data.stats.hasNoCents)}`);
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+        }
+      }
+      break;
+    }
+
+    // Timing score commands
+    case "timing": {
+      const subCommand = arg1 ?? "all";
+
+      switch (subCommand) {
+        case "all": {
+          console.log("Processing all contracts for timing score...\n");
+          const result = await service.processAllTimings();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "batch": {
+          console.log("Processing batch of contracts for timing score...\n");
+          const result = await service.processTimingBatch();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "reset": {
+          console.log("Resetting timing scores...\n");
+          const count = await service.resetTimingScores();
+          console.log(`Reset timing scores for ${String(count)} contracts`);
+          break;
+        }
+
+        default: {
+          console.log(`Calculating timing score for contract ${subCommand}...\n`);
+          const result = await service.calculateTimingScore(subCommand);
+          if (result.success) {
+            console.log(`Score: ${String(result.data.score)}/25`);
+            console.log(`Is Anomaly: ${String(result.data.isAnomaly)}`);
+            console.log(`Reason: ${result.data.reason}`);
+            if (result.data.stats) {
+              console.log("\nStatistics:");
+              console.log(`  Signature Date: ${result.data.stats.signatureDate?.toISOString() ?? "N/A"}`);
+              console.log(`  Publication Date: ${result.data.stats.publicationDate?.toISOString() ?? "N/A"}`);
+              console.log(`  Is December: ${String(result.data.stats.isDecember)}`);
+              console.log(`  Last Week of December: ${String(result.data.stats.isLastWeekOfDecember)}`);
+              console.log(`  Is Weekend: ${String(result.data.stats.isWeekend)}`);
+              console.log(`  Days from Pub to Sig: ${result.data.stats.daysFromPublicationToSignature ?? "N/A"}`);
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+        }
+      }
+      break;
+    }
+
+    // Fragmentation score commands
+    case "fragmentation": {
+      const subCommand = arg1 ?? "all";
+
+      switch (subCommand) {
+        case "all": {
+          console.log("Processing all contracts for fragmentation score...\n");
+          const result = await service.processAllFragmentations();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "batch": {
+          console.log("Processing batch of contracts for fragmentation score...\n");
+          const result = await service.processFragmentationBatch();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "reset": {
+          console.log("Resetting fragmentation scores...\n");
+          const count = await service.resetFragmentationScores();
+          console.log(`Reset fragmentation scores for ${String(count)} contracts`);
+          break;
+        }
+
+        default: {
+          console.log(`Calculating fragmentation score for contract ${subCommand}...\n`);
+          const result = await service.calculateFragmentationScore(subCommand);
+          if (result.success) {
+            console.log(`Score: ${String(result.data.score)}/25`);
+            console.log(`Is Anomaly: ${String(result.data.isAnomaly)}`);
+            console.log(`Reason: ${result.data.reason}`);
+            if (result.data.stats) {
+              console.log("\nStatistics:");
+              console.log(`  Contracts in 30 days: ${String(result.data.stats.contractsIn30Days)}`);
+              console.log(`  Near Dispensa Limit: ${String(result.data.stats.isNearDispensaLimit)}`);
+              console.log(`  Similar Contracts: ${String(result.data.stats.similarContracts)}`);
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+        }
+      }
+      break;
+    }
+
+    // Description score commands
+    case "description": {
+      const subCommand = arg1 ?? "all";
+
+      switch (subCommand) {
+        case "all": {
+          console.log("Processing all contracts for description score...\n");
+          const result = await service.processAllDescriptions();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "batch": {
+          console.log("Processing batch of contracts for description score...\n");
+          const result = await service.processDescriptionBatch();
+          if (!result.success) {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+          break;
+        }
+
+        case "reset": {
+          console.log("Resetting description scores...\n");
+          const count = await service.resetDescriptionScores();
+          console.log(`Reset description scores for ${String(count)} contracts`);
+          break;
+        }
+
+        default: {
+          console.log(`Calculating description score for contract ${subCommand}...\n`);
+          const result = await service.calculateDescriptionScore(subCommand);
+          if (result.success) {
+            console.log(`Score: ${String(result.data.score)}/25`);
+            console.log(`Is Anomaly: ${String(result.data.isAnomaly)}`);
+            console.log(`Reason: ${result.data.reason}`);
+            if (result.data.stats) {
+              console.log("\nStatistics:");
+              console.log(`  Object Length: ${String(result.data.stats.objectLength)} chars`);
+              console.log(`  Is Too Generic: ${String(result.data.stats.isTooGeneric)}`);
+              console.log(`  Has Specific Brand: ${String(result.data.stats.hasSpecificBrand)}`);
+              console.log(`  Has Vague Terms: ${String(result.data.stats.hasVagueTerms)}`);
+              console.log(`  Is Overly Specific: ${String(result.data.stats.isOverlySpecific)}`);
+            }
+          } else {
+            console.error("Error:", result.error.message);
+            process.exit(1);
+          }
+        }
+      }
+      break;
+    }
+
     default:
       console.log("Anomaly Score Commands:");
       console.log("\nValue Score (US-010):");
@@ -622,6 +849,50 @@ async function main() {
       );
       console.log(
         "  duration:recalculate <id> - Recalculate and save duration score"
+      );
+      console.log("\nRound Number Score:");
+      console.log(
+        "  roundnumber all      - Process all contracts for round number score"
+      );
+      console.log(
+        "  roundnumber batch    - Process a batch for round number score"
+      );
+      console.log("  roundnumber reset    - Reset round number scores");
+      console.log(
+        "  roundnumber <id>     - Calculate round number score (no save)"
+      );
+      console.log("\nTiming Score:");
+      console.log(
+        "  timing all           - Process all contracts for timing score"
+      );
+      console.log(
+        "  timing batch         - Process a batch for timing score"
+      );
+      console.log("  timing reset         - Reset timing scores");
+      console.log(
+        "  timing <id>          - Calculate timing score (no save)"
+      );
+      console.log("\nFragmentation Score:");
+      console.log(
+        "  fragmentation all    - Process all contracts for fragmentation score"
+      );
+      console.log(
+        "  fragmentation batch  - Process a batch for fragmentation score"
+      );
+      console.log("  fragmentation reset  - Reset fragmentation scores");
+      console.log(
+        "  fragmentation <id>   - Calculate fragmentation score (no save)"
+      );
+      console.log("\nDescription Score:");
+      console.log(
+        "  description all      - Process all contracts for description score"
+      );
+      console.log(
+        "  description batch    - Process a batch for description score"
+      );
+      console.log("  description reset    - Reset description scores");
+      console.log(
+        "  description <id>     - Calculate description score (no save)"
       );
       console.log("\nConsolidated Score (US-014):");
       console.log(

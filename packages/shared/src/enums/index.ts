@@ -41,6 +41,10 @@ export const ScoreCriterion = {
   AMENDMENT: "amendment",
   CONCENTRATION: "concentration",
   DURATION: "duration",
+  TIMING: "timing",
+  ROUND_NUMBER: "roundNumber",
+  FRAGMENTATION: "fragmentation",
+  DESCRIPTION: "description",
 } as const;
 
 export type ScoreCriterion =

@@ -11,6 +11,10 @@ const criterionLabels: Record<ScoreBreakdownItem["criterion"], string> = {
   amendment: "Aditivos",
   concentration: "Concentração",
   duration: "Duração",
+  timing: "Timing",
+  roundNumber: "Valor Redondo",
+  fragmentation: "Fracionamento",
+  description: "Descrição",
 };
 
 const criterionDescriptions: Record<ScoreBreakdownItem["criterion"], string> = {
@@ -18,6 +22,10 @@ const criterionDescriptions: Record<ScoreBreakdownItem["criterion"], string> = {
   amendment: "Quantidade e impacto de aditivos",
   concentration: "Concentração de fornecedor",
   duration: "Prazo do contrato",
+  timing: "Padrões temporais suspeitos",
+  roundNumber: "Valores redondos suspeitos",
+  fragmentation: "Fracionamento de contratos",
+  description: "Qualidade da descrição",
 };
 
 function getScoreColor(score: number): string {
@@ -70,7 +78,7 @@ export function ScoreBreakdown({ anomalyScore }: ScoreBreakdownProps) {
           >
             {anomalyScore.totalScore}
           </span>
-          <span className="text-muted-foreground text-sm">/100</span>
+          <span className="text-muted-foreground text-sm">/200</span>
         </div>
         <Badge variant={getCategoryVariant(anomalyScore.category)} className="text-sm">
           {getCategoryLabel(anomalyScore.category)}

@@ -30,6 +30,14 @@ import type {
   ContractWithScore,
   ContractScoreListOptions,
   ContractScoreListResult,
+  RoundNumberScoreResult,
+  RoundNumberStats,
+  TimingScoreResult,
+  TimingStats,
+  FragmentationScoreResult,
+  FragmentationStats,
+  DescriptionScoreResult,
+  DescriptionStats,
 } from "./types/index.js";
 
 const DEFAULT_CONFIG: AnomalyConfig = {
@@ -2168,11 +2176,12 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
 
   /**
    * Calculates the category based on total score
-   * LOW: 0-30, MEDIUM: 31-60, HIGH: 61-100
+   * With 8 criteria (max 200 pts):
+   * LOW: 0-50, MEDIUM: 51-100, HIGH: 101-200
    */
   function calculateCategory(totalScore: number): ScoreCategory {
-    if (totalScore > 60) return "HIGH";
-    if (totalScore > 30) return "MEDIUM";
+    if (totalScore > 100) return "HIGH";
+    if (totalScore > 50) return "MEDIUM";
     return "LOW";
   }
 
@@ -2188,8 +2197,16 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     concentrationReason: string | null;
     durationScore: number;
     durationReason: string | null;
+    timingScore?: number | null;
+    timingReason?: string | null;
+    roundNumberScore?: number | null;
+    roundNumberReason?: string | null;
+    fragmentationScore?: number | null;
+    fragmentationReason?: string | null;
+    descriptionScore?: number | null;
+    descriptionReason?: string | null;
   }): ScoreBreakdownItem[] {
-    return [
+    const breakdown: ScoreBreakdownItem[] = [
       {
         criterion: "value",
         score: score.valueScore,
@@ -2215,6 +2232,45 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
         isContributing: score.durationScore > 0,
       },
     ];
+
+    // Add new criteria if present
+    if (score.timingScore !== undefined && score.timingScore !== null) {
+      breakdown.push({
+        criterion: "timing",
+        score: score.timingScore,
+        reason: score.timingReason ?? null,
+        isContributing: score.timingScore > 0,
+      });
+    }
+
+    if (score.roundNumberScore !== undefined && score.roundNumberScore !== null) {
+      breakdown.push({
+        criterion: "roundNumber",
+        score: score.roundNumberScore,
+        reason: score.roundNumberReason ?? null,
+        isContributing: score.roundNumberScore > 0,
+      });
+    }
+
+    if (score.fragmentationScore !== undefined && score.fragmentationScore !== null) {
+      breakdown.push({
+        criterion: "fragmentation",
+        score: score.fragmentationScore,
+        reason: score.fragmentationReason ?? null,
+        isContributing: score.fragmentationScore > 0,
+      });
+    }
+
+    if (score.descriptionScore !== undefined && score.descriptionScore !== null) {
+      breakdown.push({
+        criterion: "description",
+        score: score.descriptionScore,
+        reason: score.descriptionReason ?? null,
+        isContributing: score.descriptionScore > 0,
+      });
+    }
+
+    return breakdown;
   }
 
   /**
@@ -2224,6 +2280,31 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     return breakdown
       .filter((item) => item.isContributing)
       .map((item) => item.criterion);
+  }
+
+  /**
+   * Calculates total score from all 8 criteria
+   */
+  function calculateTotalFromScore(score: {
+    valueScore: number;
+    amendmentScore: number;
+    concentrationScore: number;
+    durationScore: number;
+    timingScore: number | null;
+    roundNumberScore: number | null;
+    fragmentationScore: number | null;
+    descriptionScore: number | null;
+  }): number {
+    return (
+      score.valueScore +
+      score.amendmentScore +
+      score.concentrationScore +
+      score.durationScore +
+      (score.timingScore ?? 0) +
+      (score.roundNumberScore ?? 0) +
+      (score.fragmentationScore ?? 0) +
+      (score.descriptionScore ?? 0)
+    );
   }
 
   /**
@@ -2246,11 +2327,7 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       };
     }
 
-    const totalScore =
-      score.valueScore +
-      score.amendmentScore +
-      score.concentrationScore +
-      score.durationScore;
+    const totalScore = calculateTotalFromScore(score);
     const category = calculateCategory(totalScore);
     const breakdown = buildScoreBreakdown(score);
     const contributingCriteria = getContributingCriteria(breakdown);
@@ -2288,11 +2365,7 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       };
     }
 
-    const totalScore =
-      score.valueScore +
-      score.amendmentScore +
-      score.concentrationScore +
-      score.durationScore;
+    const totalScore = calculateTotalFromScore(score);
     const category = calculateCategory(totalScore);
 
     // Update the database with consolidated values
@@ -2339,6 +2412,10 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
         amendmentScore: true,
         concentrationScore: true,
         durationScore: true,
+        timingScore: true,
+        roundNumberScore: true,
+        fragmentationScore: true,
+        descriptionScore: true,
         totalScore: true,
         category: true,
       },
@@ -2349,11 +2426,7 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
 
     for (const score of scores) {
       processed++;
-      const newTotalScore =
-        score.valueScore +
-        score.amendmentScore +
-        score.concentrationScore +
-        score.durationScore;
+      const newTotalScore = calculateTotalFromScore(score);
       const newCategory = calculateCategory(newTotalScore);
 
       // Only update if values changed
@@ -2475,6 +2548,10 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       amendment: number;
       concentration: number;
       duration: number;
+      timing: number;
+      roundNumber: number;
+      fragmentation: number;
+      description: number;
     };
   }> {
     const [
@@ -2487,6 +2564,10 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       withAmendmentAnomaly,
       withConcentrationAnomaly,
       withDurationAnomaly,
+      withTimingAnomaly,
+      withRoundNumberAnomaly,
+      withFragmentationAnomaly,
+      withDescriptionAnomaly,
     ] = await Promise.all([
       prisma.anomalyScore.count(),
       prisma.anomalyScore.count({ where: { category: "LOW" } }),
@@ -2497,6 +2578,10 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       prisma.anomalyScore.count({ where: { amendmentScore: { gt: 0 } } }),
       prisma.anomalyScore.count({ where: { concentrationScore: { gt: 0 } } }),
       prisma.anomalyScore.count({ where: { durationScore: { gt: 0 } } }),
+      prisma.anomalyScore.count({ where: { timingScore: { gt: 0 } } }),
+      prisma.anomalyScore.count({ where: { roundNumberScore: { gt: 0 } } }),
+      prisma.anomalyScore.count({ where: { fragmentationScore: { gt: 0 } } }),
+      prisma.anomalyScore.count({ where: { descriptionScore: { gt: 0 } } }),
     ]);
 
     // Count contracts with any anomaly (totalScore > 0)
@@ -2518,8 +2603,1563 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
         amendment: withAmendmentAnomaly,
         concentration: withConcentrationAnomaly,
         duration: withDurationAnomaly,
+        timing: withTimingAnomaly,
+        roundNumber: withRoundNumberAnomaly,
+        fragmentation: withFragmentationAnomaly,
+        description: withDescriptionAnomaly,
       },
     };
+  }
+
+  // ============================================
+  // ROUND NUMBER SCORE
+  // ============================================
+
+  /**
+   * Dispensa limit for fragmentation detection
+   */
+  const DISPENSA_LIMIT = 50000;
+
+  /**
+   * Gets a contract for round number calculation
+   */
+  async function getContractForRoundNumber(contractId: string) {
+    return prisma.contract.findUnique({
+      where: { id: contractId },
+      select: {
+        id: true,
+        externalId: true,
+        value: true,
+        anomalyScore: true,
+      },
+    });
+  }
+
+  /**
+   * Gets contracts that need round number score calculation
+   */
+  async function getContractsForRoundNumberScore(limit: number) {
+    return prisma.contract.findMany({
+      where: {
+        anomalyScore: {
+          roundNumberScore: null,
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      take: limit,
+      select: {
+        id: true,
+        externalId: true,
+        value: true,
+      },
+    });
+  }
+
+  /**
+   * Calculates the round number score for a contract
+   * Detects suspiciously round values
+   */
+  async function calculateRoundNumberScore(
+    contractId: string
+  ): Promise<Result<RoundNumberScoreResult, AnomalyError>> {
+    const contract = await getContractForRoundNumber(contractId);
+
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    const value = Number(contract.value);
+    const flags: string[] = [];
+    let score = 0;
+
+    // Check for multiples
+    const isMultipleOf100k = value >= 100000 && value % 100000 === 0;
+    const isMultipleOf10k = value >= 10000 && value % 10000 === 0;
+    const isMultipleOf1k = value >= 1000 && value % 1000 === 0;
+
+    // Check for cents (values > 100k without cents are suspicious)
+    const hasNoCents = value > 100000 && value === Math.floor(value);
+
+    if (isMultipleOf100k) {
+      score += 15;
+      flags.push(`Múltiplo exato de R$ 100.000`);
+    } else if (isMultipleOf10k) {
+      score += 10;
+      flags.push(`Múltiplo exato de R$ 10.000`);
+    } else if (isMultipleOf1k) {
+      score += 5;
+      flags.push(`Múltiplo exato de R$ 1.000`);
+    }
+
+    if (hasNoCents && !isMultipleOf1k) {
+      score += 5;
+      flags.push(`Sem centavos em valor > R$ 100.000`);
+    }
+
+    // Cap at 25
+    score = Math.min(finalConfig.maxScore, score);
+
+    const isAnomaly = score > 0;
+
+    const stats: RoundNumberStats = {
+      value,
+      isMultipleOf100k,
+      isMultipleOf10k,
+      isMultipleOf1k,
+      hasNoCents,
+      roundnessFlags: flags,
+    };
+
+    const reason = isAnomaly
+      ? flags.join("; ")
+      : "Valor não apresenta padrões de arredondamento suspeitos";
+
+    return {
+      success: true,
+      data: {
+        score,
+        reason,
+        isAnomaly,
+        stats,
+      },
+    };
+  }
+
+  /**
+   * Calculates round number score and saves to database
+   */
+  async function calculateRoundNumberScoreAndSave(
+    contractId: string
+  ): Promise<Result<{ contractId: string; roundNumberScore: number; roundNumberReason: string }, AnomalyError>> {
+    const result = await calculateRoundNumberScore(contractId);
+
+    if (!result.success) {
+      return result;
+    }
+
+    const contract = await getContractForRoundNumber(contractId);
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    if (!contract.anomalyScore) {
+      return {
+        success: false,
+        error: {
+          code: "CALCULATION_FAILED",
+          message: `Contract ${contractId} has no anomaly score record. Run value score calculation first.`,
+        },
+      };
+    }
+
+    try {
+      // Get current scores
+      const currentScore = contract.anomalyScore;
+      const newTotalScore =
+        currentScore.valueScore +
+        currentScore.amendmentScore +
+        currentScore.concentrationScore +
+        currentScore.durationScore +
+        (currentScore.timingScore ?? 0) +
+        result.data.score +
+        (currentScore.fragmentationScore ?? 0) +
+        (currentScore.descriptionScore ?? 0);
+      const newCategory = calculateCategory(newTotalScore);
+
+      await prisma.anomalyScore.update({
+        where: { contractId },
+        data: {
+          roundNumberScore: result.data.score,
+          roundNumberReason: result.data.reason,
+          totalScore: newTotalScore,
+          category: newCategory,
+        },
+      });
+
+      console.log(
+        `[Anomaly] ${contract.externalId}: Round number score ${String(result.data.score)}/25 - ${result.data.reason}`
+      );
+
+      return {
+        success: true,
+        data: {
+          contractId,
+          roundNumberScore: result.data.score,
+          roundNumberReason: result.data.reason,
+        },
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          code: "DATABASE_ERROR",
+          message: err instanceof Error ? err.message : "Database error",
+          details: err,
+        },
+      };
+    }
+  }
+
+  /**
+   * Process a batch of contracts for round number score
+   */
+  async function processRoundNumberBatch(): Promise<Result<AnomalyStats, AnomalyError>> {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log(
+      `[Anomaly] Starting round number score batch (batch size: ${String(finalConfig.batchSize)})`
+    );
+
+    const contracts = await getContractsForRoundNumberScore(finalConfig.batchSize);
+
+    if (contracts.length === 0) {
+      console.log("[Anomaly] No contracts pending round number score calculation");
+      stats.finishedAt = new Date();
+      return { success: true, data: stats };
+    }
+
+    console.log(
+      `[Anomaly] Found ${String(contracts.length)} contracts to process for round number score`
+    );
+
+    for (const contract of contracts) {
+      const result = await calculateRoundNumberScoreAndSave(contract.id);
+      stats.processed++;
+
+      if (result.success) {
+        stats.calculated++;
+        if (result.data.roundNumberScore > 0) {
+          stats.anomaliesFound++;
+        }
+      } else {
+        stats.errors++;
+        stats.lastError = result.error.message;
+        console.error(
+          `[Anomaly] Error calculating round number score for ${contract.externalId}: ${result.error.message}`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Round number batch completed:");
+    console.log(`  - Processed: ${String(stats.processed)}`);
+    console.log(`  - Calculated: ${String(stats.calculated)}`);
+    console.log(`  - Anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Process all pending contracts for round number score
+   */
+  async function processAllRoundNumbers(): Promise<Result<AnomalyStats, AnomalyError>> {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log("[Anomaly] Starting full round number score processing run");
+
+    let hasMore = true;
+
+    while (hasMore) {
+      const batchResult = await processRoundNumberBatch();
+
+      if (!batchResult.success) {
+        stats.lastError = batchResult.error.message;
+        stats.finishedAt = new Date();
+        return { success: false, error: batchResult.error };
+      }
+
+      const batchStats = batchResult.data;
+      stats.processed += batchStats.processed;
+      stats.calculated += batchStats.calculated;
+      stats.anomaliesFound += batchStats.anomaliesFound;
+      stats.errors += batchStats.errors;
+
+      if (batchStats.lastError) {
+        stats.lastError = batchStats.lastError;
+      }
+
+      const remaining = await prisma.anomalyScore.count({
+        where: {
+          roundNumberScore: null,
+        },
+      });
+
+      hasMore = remaining > 0;
+
+      if (hasMore) {
+        console.log(
+          `[Anomaly] ${String(remaining)} contracts remaining for round number score`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Full round number processing completed:");
+    console.log(`  - Total processed: ${String(stats.processed)}`);
+    console.log(`  - Total calculated: ${String(stats.calculated)}`);
+    console.log(`  - Total anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Total errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Reset round number scores for recalculation
+   */
+  async function resetRoundNumberScores(): Promise<number> {
+    const result = await prisma.anomalyScore.updateMany({
+      data: {
+        roundNumberScore: null,
+        roundNumberReason: null,
+      },
+    });
+
+    // Recalculate totals
+    await recalculateAllTotals();
+
+    console.log(
+      `[Anomaly] Reset round number scores for ${String(result.count)} contracts`
+    );
+    return result.count;
+  }
+
+  // ============================================
+  // TIMING SCORE
+  // ============================================
+
+  /**
+   * Gets a contract for timing calculation
+   */
+  async function getContractForTiming(contractId: string) {
+    return prisma.contract.findUnique({
+      where: { id: contractId },
+      select: {
+        id: true,
+        externalId: true,
+        signatureDate: true,
+        publicationDate: true,
+        anomalyScore: true,
+      },
+    });
+  }
+
+  /**
+   * Gets contracts that need timing score calculation
+   */
+  async function getContractsForTimingScore(limit: number) {
+    return prisma.contract.findMany({
+      where: {
+        anomalyScore: {
+          timingScore: null,
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      take: limit,
+      select: {
+        id: true,
+        externalId: true,
+        signatureDate: true,
+        publicationDate: true,
+      },
+    });
+  }
+
+  /**
+   * Checks if a date is a weekend
+   */
+  function isWeekend(date: Date): boolean {
+    const day = date.getDay();
+    return day === 0 || day === 6; // Sunday = 0, Saturday = 6
+  }
+
+  /**
+   * Checks if date is in December
+   */
+  function isDecember(date: Date): boolean {
+    return date.getMonth() === 11; // December = 11
+  }
+
+  /**
+   * Checks if date is in last week of December (25-31)
+   */
+  function isLastWeekOfDecember(date: Date): boolean {
+    return date.getMonth() === 11 && date.getDate() >= 25;
+  }
+
+  /**
+   * Calculates days between two dates
+   */
+  function daysBetween(date1: Date, date2: Date): number {
+    const diffTime = Math.abs(date2.getTime() - date1.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  /**
+   * Calculates the timing score for a contract
+   * Detects suspicious timing patterns
+   */
+  async function calculateTimingScore(
+    contractId: string
+  ): Promise<Result<TimingScoreResult, AnomalyError>> {
+    const contract = await getContractForTiming(contractId);
+
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    const flags: string[] = [];
+    let score = 0;
+
+    const signatureDate = contract.signatureDate;
+    const publicationDate = contract.publicationDate;
+
+    let isDecemberContract = false;
+    let isLastWeek = false;
+    let isWeekendContract = false;
+    let daysFromPubToSig: number | null = null;
+
+    if (signatureDate) {
+      // Check December
+      if (isDecember(signatureDate)) {
+        score += 10;
+        isDecemberContract = true;
+        flags.push("Contrato assinado em dezembro");
+
+        // Additional points for last week
+        if (isLastWeekOfDecember(signatureDate)) {
+          score += 5;
+          isLastWeek = true;
+          flags.push("Última semana de dezembro");
+        }
+      }
+
+      // Check weekend
+      if (isWeekend(signatureDate)) {
+        score += 5;
+        isWeekendContract = true;
+        flags.push("Assinatura em fim de semana");
+      }
+
+      // Check time between publication and signature
+      if (publicationDate) {
+        daysFromPubToSig = daysBetween(publicationDate, signatureDate);
+        if (daysFromPubToSig < 3) {
+          score += 5;
+          flags.push(`Apenas ${String(daysFromPubToSig)} dia(s) entre publicação e assinatura`);
+        }
+      }
+    }
+
+    // Cap at 25
+    score = Math.min(finalConfig.maxScore, score);
+
+    const isAnomaly = score > 0;
+
+    const stats: TimingStats = {
+      signatureDate,
+      publicationDate,
+      isDecember: isDecemberContract,
+      isLastWeekOfDecember: isLastWeek,
+      isWeekend: isWeekendContract,
+      daysFromPublicationToSignature: daysFromPubToSig,
+      timingFlags: flags,
+    };
+
+    const reason = isAnomaly
+      ? flags.join("; ")
+      : "Sem padrões temporais suspeitos";
+
+    return {
+      success: true,
+      data: {
+        score,
+        reason,
+        isAnomaly,
+        stats,
+      },
+    };
+  }
+
+  /**
+   * Calculates timing score and saves to database
+   */
+  async function calculateTimingScoreAndSave(
+    contractId: string
+  ): Promise<Result<{ contractId: string; timingScore: number; timingReason: string }, AnomalyError>> {
+    const result = await calculateTimingScore(contractId);
+
+    if (!result.success) {
+      return result;
+    }
+
+    const contract = await getContractForTiming(contractId);
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    if (!contract.anomalyScore) {
+      return {
+        success: false,
+        error: {
+          code: "CALCULATION_FAILED",
+          message: `Contract ${contractId} has no anomaly score record. Run value score calculation first.`,
+        },
+      };
+    }
+
+    try {
+      const currentScore = contract.anomalyScore;
+      const newTotalScore =
+        currentScore.valueScore +
+        currentScore.amendmentScore +
+        currentScore.concentrationScore +
+        currentScore.durationScore +
+        result.data.score +
+        (currentScore.roundNumberScore ?? 0) +
+        (currentScore.fragmentationScore ?? 0) +
+        (currentScore.descriptionScore ?? 0);
+      const newCategory = calculateCategory(newTotalScore);
+
+      await prisma.anomalyScore.update({
+        where: { contractId },
+        data: {
+          timingScore: result.data.score,
+          timingReason: result.data.reason,
+          totalScore: newTotalScore,
+          category: newCategory,
+        },
+      });
+
+      console.log(
+        `[Anomaly] ${contract.externalId}: Timing score ${String(result.data.score)}/25 - ${result.data.reason}`
+      );
+
+      return {
+        success: true,
+        data: {
+          contractId,
+          timingScore: result.data.score,
+          timingReason: result.data.reason,
+        },
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          code: "DATABASE_ERROR",
+          message: err instanceof Error ? err.message : "Database error",
+          details: err,
+        },
+      };
+    }
+  }
+
+  /**
+   * Process a batch of contracts for timing score
+   */
+  async function processTimingBatch(): Promise<Result<AnomalyStats, AnomalyError>> {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log(
+      `[Anomaly] Starting timing score batch (batch size: ${String(finalConfig.batchSize)})`
+    );
+
+    const contracts = await getContractsForTimingScore(finalConfig.batchSize);
+
+    if (contracts.length === 0) {
+      console.log("[Anomaly] No contracts pending timing score calculation");
+      stats.finishedAt = new Date();
+      return { success: true, data: stats };
+    }
+
+    console.log(
+      `[Anomaly] Found ${String(contracts.length)} contracts to process for timing score`
+    );
+
+    for (const contract of contracts) {
+      const result = await calculateTimingScoreAndSave(contract.id);
+      stats.processed++;
+
+      if (result.success) {
+        stats.calculated++;
+        if (result.data.timingScore > 0) {
+          stats.anomaliesFound++;
+        }
+      } else {
+        stats.errors++;
+        stats.lastError = result.error.message;
+        console.error(
+          `[Anomaly] Error calculating timing score for ${contract.externalId}: ${result.error.message}`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Timing batch completed:");
+    console.log(`  - Processed: ${String(stats.processed)}`);
+    console.log(`  - Calculated: ${String(stats.calculated)}`);
+    console.log(`  - Anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Process all pending contracts for timing score
+   */
+  async function processAllTimings(): Promise<Result<AnomalyStats, AnomalyError>> {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log("[Anomaly] Starting full timing score processing run");
+
+    let hasMore = true;
+
+    while (hasMore) {
+      const batchResult = await processTimingBatch();
+
+      if (!batchResult.success) {
+        stats.lastError = batchResult.error.message;
+        stats.finishedAt = new Date();
+        return { success: false, error: batchResult.error };
+      }
+
+      const batchStats = batchResult.data;
+      stats.processed += batchStats.processed;
+      stats.calculated += batchStats.calculated;
+      stats.anomaliesFound += batchStats.anomaliesFound;
+      stats.errors += batchStats.errors;
+
+      if (batchStats.lastError) {
+        stats.lastError = batchStats.lastError;
+      }
+
+      const remaining = await prisma.anomalyScore.count({
+        where: {
+          timingScore: null,
+        },
+      });
+
+      hasMore = remaining > 0;
+
+      if (hasMore) {
+        console.log(
+          `[Anomaly] ${String(remaining)} contracts remaining for timing score`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Full timing processing completed:");
+    console.log(`  - Total processed: ${String(stats.processed)}`);
+    console.log(`  - Total calculated: ${String(stats.calculated)}`);
+    console.log(`  - Total anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Total errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Reset timing scores for recalculation
+   */
+  async function resetTimingScores(): Promise<number> {
+    const result = await prisma.anomalyScore.updateMany({
+      data: {
+        timingScore: null,
+        timingReason: null,
+      },
+    });
+
+    await recalculateAllTotals();
+
+    console.log(
+      `[Anomaly] Reset timing scores for ${String(result.count)} contracts`
+    );
+    return result.count;
+  }
+
+  // ============================================
+  // FRAGMENTATION SCORE
+  // ============================================
+
+  /**
+   * Gets a contract for fragmentation calculation
+   */
+  async function getContractForFragmentation(contractId: string) {
+    return prisma.contract.findUnique({
+      where: { id: contractId },
+      select: {
+        id: true,
+        externalId: true,
+        value: true,
+        object: true,
+        supplierId: true,
+        agencyId: true,
+        signatureDate: true,
+        anomalyScore: true,
+      },
+    });
+  }
+
+  /**
+   * Gets contracts that need fragmentation score calculation
+   */
+  async function getContractsForFragmentationScore(limit: number) {
+    return prisma.contract.findMany({
+      where: {
+        anomalyScore: {
+          fragmentationScore: null,
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      take: limit,
+      select: {
+        id: true,
+        externalId: true,
+        value: true,
+        object: true,
+        supplierId: true,
+        agencyId: true,
+        signatureDate: true,
+      },
+    });
+  }
+
+  /**
+   * Simple text similarity using Jaccard coefficient
+   */
+  function textSimilarity(text1: string | null, text2: string | null): number {
+    if (!text1 || !text2) return 0;
+
+    const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+    const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+
+    if (words1.size === 0 || words2.size === 0) return 0;
+
+    const intersection = new Set([...words1].filter(x => words2.has(x)));
+    const union = new Set([...words1, ...words2]);
+
+    return intersection.size / union.size;
+  }
+
+  /**
+   * Calculates the fragmentation score for a contract
+   * Detects potential contract splitting to avoid bidding thresholds
+   */
+  async function calculateFragmentationScore(
+    contractId: string
+  ): Promise<Result<FragmentationScoreResult, AnomalyError>> {
+    const contract = await getContractForFragmentation(contractId);
+
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    const flags: string[] = [];
+    let score = 0;
+
+    const value = Number(contract.value);
+
+    // Check if value is near dispensa limit (R$ 40.000-50.000)
+    const isNearDispensaLimit = value >= 40000 && value <= DISPENSA_LIMIT;
+    if (isNearDispensaLimit) {
+      score += 10;
+      flags.push(`Valor próximo ao limite de dispensa (R$ ${value.toLocaleString("pt-BR")})`);
+    }
+
+    // Find similar contracts with same supplier/agency in 30 days
+    let contractsIn30Days = 0;
+    let similarContracts = 0;
+
+    if (contract.signatureDate && contract.supplierId && contract.agencyId) {
+      const thirtyDaysAgo = new Date(contract.signatureDate);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAfter = new Date(contract.signatureDate);
+      thirtyDaysAfter.setDate(thirtyDaysAfter.getDate() + 30);
+
+      const nearbyContracts = await prisma.contract.findMany({
+        where: {
+          id: { not: contractId },
+          supplierId: contract.supplierId,
+          agencyId: contract.agencyId,
+          signatureDate: {
+            gte: thirtyDaysAgo,
+            lte: thirtyDaysAfter,
+          },
+        },
+        select: {
+          id: true,
+          object: true,
+        },
+      });
+
+      contractsIn30Days = nearbyContracts.length;
+
+      // Check for 3+ contracts in 30 days
+      if (contractsIn30Days >= 3) {
+        score += 10;
+        flags.push(`${String(contractsIn30Days + 1)} contratos com mesmo fornecedor/órgão em 30 dias`);
+      }
+
+      // Check for similar objects
+      for (const nearby of nearbyContracts) {
+        const similarity = textSimilarity(contract.object, nearby.object);
+        if (similarity > 0.7) {
+          similarContracts++;
+        }
+      }
+
+      if (similarContracts > 0) {
+        score += 10;
+        flags.push(`${String(similarContracts)} contrato(s) com objeto similar (>70% similaridade)`);
+      }
+    }
+
+    // Cap at 25
+    score = Math.min(finalConfig.maxScore, score);
+
+    const isAnomaly = score > 0;
+
+    const stats: FragmentationStats = {
+      supplierId: contract.supplierId,
+      agencyId: contract.agencyId,
+      contractsIn30Days,
+      isNearDispensaLimit,
+      similarContracts,
+      fragmentationFlags: flags,
+    };
+
+    const reason = isAnomaly
+      ? flags.join("; ")
+      : "Sem indícios de fracionamento";
+
+    return {
+      success: true,
+      data: {
+        score,
+        reason,
+        isAnomaly,
+        stats,
+      },
+    };
+  }
+
+  /**
+   * Calculates fragmentation score and saves to database
+   */
+  async function calculateFragmentationScoreAndSave(
+    contractId: string
+  ): Promise<Result<{ contractId: string; fragmentationScore: number; fragmentationReason: string }, AnomalyError>> {
+    const result = await calculateFragmentationScore(contractId);
+
+    if (!result.success) {
+      return result;
+    }
+
+    const contract = await getContractForFragmentation(contractId);
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    if (!contract.anomalyScore) {
+      return {
+        success: false,
+        error: {
+          code: "CALCULATION_FAILED",
+          message: `Contract ${contractId} has no anomaly score record. Run value score calculation first.`,
+        },
+      };
+    }
+
+    try {
+      const currentScore = contract.anomalyScore;
+      const newTotalScore =
+        currentScore.valueScore +
+        currentScore.amendmentScore +
+        currentScore.concentrationScore +
+        currentScore.durationScore +
+        (currentScore.timingScore ?? 0) +
+        (currentScore.roundNumberScore ?? 0) +
+        result.data.score +
+        (currentScore.descriptionScore ?? 0);
+      const newCategory = calculateCategory(newTotalScore);
+
+      await prisma.anomalyScore.update({
+        where: { contractId },
+        data: {
+          fragmentationScore: result.data.score,
+          fragmentationReason: result.data.reason,
+          totalScore: newTotalScore,
+          category: newCategory,
+        },
+      });
+
+      console.log(
+        `[Anomaly] ${contract.externalId}: Fragmentation score ${String(result.data.score)}/25 - ${result.data.reason}`
+      );
+
+      return {
+        success: true,
+        data: {
+          contractId,
+          fragmentationScore: result.data.score,
+          fragmentationReason: result.data.reason,
+        },
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          code: "DATABASE_ERROR",
+          message: err instanceof Error ? err.message : "Database error",
+          details: err,
+        },
+      };
+    }
+  }
+
+  /**
+   * Process a batch of contracts for fragmentation score
+   */
+  async function processFragmentationBatch(): Promise<Result<AnomalyStats, AnomalyError>> {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log(
+      `[Anomaly] Starting fragmentation score batch (batch size: ${String(finalConfig.batchSize)})`
+    );
+
+    const contracts = await getContractsForFragmentationScore(finalConfig.batchSize);
+
+    if (contracts.length === 0) {
+      console.log("[Anomaly] No contracts pending fragmentation score calculation");
+      stats.finishedAt = new Date();
+      return { success: true, data: stats };
+    }
+
+    console.log(
+      `[Anomaly] Found ${String(contracts.length)} contracts to process for fragmentation score`
+    );
+
+    for (const contract of contracts) {
+      const result = await calculateFragmentationScoreAndSave(contract.id);
+      stats.processed++;
+
+      if (result.success) {
+        stats.calculated++;
+        if (result.data.fragmentationScore > 0) {
+          stats.anomaliesFound++;
+        }
+      } else {
+        stats.errors++;
+        stats.lastError = result.error.message;
+        console.error(
+          `[Anomaly] Error calculating fragmentation score for ${contract.externalId}: ${result.error.message}`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Fragmentation batch completed:");
+    console.log(`  - Processed: ${String(stats.processed)}`);
+    console.log(`  - Calculated: ${String(stats.calculated)}`);
+    console.log(`  - Anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Process all pending contracts for fragmentation score
+   */
+  async function processAllFragmentations(): Promise<Result<AnomalyStats, AnomalyError>> {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log("[Anomaly] Starting full fragmentation score processing run");
+
+    let hasMore = true;
+
+    while (hasMore) {
+      const batchResult = await processFragmentationBatch();
+
+      if (!batchResult.success) {
+        stats.lastError = batchResult.error.message;
+        stats.finishedAt = new Date();
+        return { success: false, error: batchResult.error };
+      }
+
+      const batchStats = batchResult.data;
+      stats.processed += batchStats.processed;
+      stats.calculated += batchStats.calculated;
+      stats.anomaliesFound += batchStats.anomaliesFound;
+      stats.errors += batchStats.errors;
+
+      if (batchStats.lastError) {
+        stats.lastError = batchStats.lastError;
+      }
+
+      const remaining = await prisma.anomalyScore.count({
+        where: {
+          fragmentationScore: null,
+        },
+      });
+
+      hasMore = remaining > 0;
+
+      if (hasMore) {
+        console.log(
+          `[Anomaly] ${String(remaining)} contracts remaining for fragmentation score`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Full fragmentation processing completed:");
+    console.log(`  - Total processed: ${String(stats.processed)}`);
+    console.log(`  - Total calculated: ${String(stats.calculated)}`);
+    console.log(`  - Total anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Total errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Reset fragmentation scores for recalculation
+   */
+  async function resetFragmentationScores(): Promise<number> {
+    const result = await prisma.anomalyScore.updateMany({
+      data: {
+        fragmentationScore: null,
+        fragmentationReason: null,
+      },
+    });
+
+    await recalculateAllTotals();
+
+    console.log(
+      `[Anomaly] Reset fragmentation scores for ${String(result.count)} contracts`
+    );
+    return result.count;
+  }
+
+  // ============================================
+  // DESCRIPTION SCORE (LLM-based)
+  // ============================================
+
+  /**
+   * Gets a contract for description analysis
+   */
+  async function getContractForDescription(contractId: string) {
+    return prisma.contract.findUnique({
+      where: { id: contractId },
+      select: {
+        id: true,
+        externalId: true,
+        object: true,
+        summary: true,
+        anomalyScore: true,
+      },
+    });
+  }
+
+  /**
+   * Gets contracts that need description score calculation
+   */
+  async function getContractsForDescriptionScore(limit: number) {
+    return prisma.contract.findMany({
+      where: {
+        anomalyScore: {
+          descriptionScore: null,
+        },
+        object: {
+          not: "",
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      take: limit,
+      select: {
+        id: true,
+        externalId: true,
+        object: true,
+        summary: true,
+      },
+    });
+  }
+
+  /**
+   * Vague terms that indicate generic descriptions
+   */
+  const VAGUE_TERMS = [
+    "conforme proposta",
+    "diversos",
+    "vários",
+    "serviços diversos",
+    "materiais diversos",
+    "conforme anexo",
+    "conforme edital",
+    "conforme contrato",
+    "a definir",
+    "outros",
+  ];
+
+  /**
+   * Brand indicators
+   */
+  const BRAND_PATTERNS = [
+    /marca\s+\w+/i,
+    /modelo\s+\w+/i,
+    /fabricante\s+\w+/i,
+    /\b(dell|hp|lenovo|apple|samsung|microsoft|oracle|sap)\b/i,
+  ];
+
+  /**
+   * Calculates the description score for a contract using heuristics
+   * (LLM version can be added later for more accurate analysis)
+   */
+  async function calculateDescriptionScore(
+    contractId: string
+  ): Promise<Result<DescriptionScoreResult, AnomalyError>> {
+    const contract = await getContractForDescription(contractId);
+
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    const object = contract.object ?? "";
+    const flags: string[] = [];
+    let score = 0;
+
+    const objectLength = object.length;
+
+    // Check if too short/generic
+    const isTooGeneric = objectLength < 50;
+    if (isTooGeneric) {
+      score += 10;
+      flags.push(`Descrição muito curta (${String(objectLength)} caracteres)`);
+    }
+
+    // Check for vague terms
+    const objectLower = object.toLowerCase();
+    const hasVagueTerms = VAGUE_TERMS.some(term => objectLower.includes(term));
+    if (hasVagueTerms) {
+      score += 5;
+      flags.push("Contém termos vagos");
+    }
+
+    // Check for brand mentions (potential direcionamento)
+    let hasSpecificBrand = false;
+    for (const pattern of BRAND_PATTERNS) {
+      if (pattern.test(object)) {
+        hasSpecificBrand = true;
+        break;
+      }
+    }
+    if (hasSpecificBrand) {
+      score += 10;
+      flags.push("Menção a marca específica (possível direcionamento)");
+    }
+
+    // Check if overly specific (very long descriptions might be trying to exclude competitors)
+    const isOverlySpecific = objectLength > 2000;
+    if (isOverlySpecific) {
+      score += 5;
+      flags.push("Descrição excessivamente detalhada (possível direcionamento)");
+    }
+
+    // Cap at 25
+    score = Math.min(finalConfig.maxScore, score);
+
+    const isAnomaly = score > 0;
+
+    const stats: DescriptionStats = {
+      objectLength,
+      isTooGeneric,
+      hasSpecificBrand,
+      hasVagueTerms,
+      isOverlySpecific,
+      descriptionFlags: flags,
+    };
+
+    const reason = isAnomaly
+      ? flags.join("; ")
+      : "Descrição adequada";
+
+    return {
+      success: true,
+      data: {
+        score,
+        reason,
+        isAnomaly,
+        stats,
+      },
+    };
+  }
+
+  /**
+   * Calculates description score and saves to database
+   */
+  async function calculateDescriptionScoreAndSave(
+    contractId: string
+  ): Promise<Result<{ contractId: string; descriptionScore: number; descriptionReason: string }, AnomalyError>> {
+    const result = await calculateDescriptionScore(contractId);
+
+    if (!result.success) {
+      return result;
+    }
+
+    const contract = await getContractForDescription(contractId);
+    if (!contract) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CONTRACT",
+          message: `Contract not found: ${contractId}`,
+        },
+      };
+    }
+
+    if (!contract.anomalyScore) {
+      return {
+        success: false,
+        error: {
+          code: "CALCULATION_FAILED",
+          message: `Contract ${contractId} has no anomaly score record. Run value score calculation first.`,
+        },
+      };
+    }
+
+    try {
+      const currentScore = contract.anomalyScore;
+      const newTotalScore =
+        currentScore.valueScore +
+        currentScore.amendmentScore +
+        currentScore.concentrationScore +
+        currentScore.durationScore +
+        (currentScore.timingScore ?? 0) +
+        (currentScore.roundNumberScore ?? 0) +
+        (currentScore.fragmentationScore ?? 0) +
+        result.data.score;
+      const newCategory = calculateCategory(newTotalScore);
+
+      await prisma.anomalyScore.update({
+        where: { contractId },
+        data: {
+          descriptionScore: result.data.score,
+          descriptionReason: result.data.reason,
+          totalScore: newTotalScore,
+          category: newCategory,
+        },
+      });
+
+      console.log(
+        `[Anomaly] ${contract.externalId}: Description score ${String(result.data.score)}/25 - ${result.data.reason}`
+      );
+
+      return {
+        success: true,
+        data: {
+          contractId,
+          descriptionScore: result.data.score,
+          descriptionReason: result.data.reason,
+        },
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          code: "DATABASE_ERROR",
+          message: err instanceof Error ? err.message : "Database error",
+          details: err,
+        },
+      };
+    }
+  }
+
+  /**
+   * Process a batch of contracts for description score
+   */
+  async function processDescriptionBatch(): Promise<Result<AnomalyStats, AnomalyError>> {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log(
+      `[Anomaly] Starting description score batch (batch size: ${String(finalConfig.batchSize)})`
+    );
+
+    const contracts = await getContractsForDescriptionScore(finalConfig.batchSize);
+
+    if (contracts.length === 0) {
+      console.log("[Anomaly] No contracts pending description score calculation");
+      stats.finishedAt = new Date();
+      return { success: true, data: stats };
+    }
+
+    console.log(
+      `[Anomaly] Found ${String(contracts.length)} contracts to process for description score`
+    );
+
+    for (const contract of contracts) {
+      const result = await calculateDescriptionScoreAndSave(contract.id);
+      stats.processed++;
+
+      if (result.success) {
+        stats.calculated++;
+        if (result.data.descriptionScore > 0) {
+          stats.anomaliesFound++;
+        }
+      } else {
+        stats.errors++;
+        stats.lastError = result.error.message;
+        console.error(
+          `[Anomaly] Error calculating description score for ${contract.externalId}: ${result.error.message}`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Description batch completed:");
+    console.log(`  - Processed: ${String(stats.processed)}`);
+    console.log(`  - Calculated: ${String(stats.calculated)}`);
+    console.log(`  - Anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Process all pending contracts for description score
+   */
+  async function processAllDescriptions(): Promise<Result<AnomalyStats, AnomalyError>> {
+    const stats: AnomalyStats = {
+      startedAt: new Date(),
+      finishedAt: null,
+      processed: 0,
+      calculated: 0,
+      anomaliesFound: 0,
+      errors: 0,
+      lastError: null,
+    };
+
+    console.log("[Anomaly] Starting full description score processing run");
+
+    let hasMore = true;
+
+    while (hasMore) {
+      const batchResult = await processDescriptionBatch();
+
+      if (!batchResult.success) {
+        stats.lastError = batchResult.error.message;
+        stats.finishedAt = new Date();
+        return { success: false, error: batchResult.error };
+      }
+
+      const batchStats = batchResult.data;
+      stats.processed += batchStats.processed;
+      stats.calculated += batchStats.calculated;
+      stats.anomaliesFound += batchStats.anomaliesFound;
+      stats.errors += batchStats.errors;
+
+      if (batchStats.lastError) {
+        stats.lastError = batchStats.lastError;
+      }
+
+      const remaining = await prisma.anomalyScore.count({
+        where: {
+          descriptionScore: null,
+          contract: {
+            object: { not: "" },
+          },
+        },
+      });
+
+      hasMore = remaining > 0;
+
+      if (hasMore) {
+        console.log(
+          `[Anomaly] ${String(remaining)} contracts remaining for description score`
+        );
+      }
+    }
+
+    stats.finishedAt = new Date();
+
+    console.log("[Anomaly] Full description processing completed:");
+    console.log(`  - Total processed: ${String(stats.processed)}`);
+    console.log(`  - Total calculated: ${String(stats.calculated)}`);
+    console.log(`  - Total anomalies found: ${String(stats.anomaliesFound)}`);
+    console.log(`  - Total errors: ${String(stats.errors)}`);
+
+    return { success: true, data: stats };
+  }
+
+  /**
+   * Reset description scores for recalculation
+   */
+  async function resetDescriptionScores(): Promise<number> {
+    const result = await prisma.anomalyScore.updateMany({
+      data: {
+        descriptionScore: null,
+        descriptionReason: null,
+      },
+    });
+
+    await recalculateAllTotals();
+
+    console.log(
+      `[Anomaly] Reset description scores for ${String(result.count)} contracts`
+    );
+    return result.count;
+  }
+
+  /**
+   * Helper function to recalculate all totals after a reset
+   */
+  async function recalculateAllTotals(): Promise<void> {
+    const scores = await prisma.anomalyScore.findMany({
+      select: {
+        contractId: true,
+        valueScore: true,
+        amendmentScore: true,
+        concentrationScore: true,
+        durationScore: true,
+        timingScore: true,
+        roundNumberScore: true,
+        fragmentationScore: true,
+        descriptionScore: true,
+      },
+    });
+
+    for (const score of scores) {
+      const newTotal =
+        score.valueScore +
+        score.amendmentScore +
+        score.concentrationScore +
+        score.durationScore +
+        (score.timingScore ?? 0) +
+        (score.roundNumberScore ?? 0) +
+        (score.fragmentationScore ?? 0) +
+        (score.descriptionScore ?? 0);
+      const newCategory = calculateCategory(newTotal);
+
+      await prisma.anomalyScore.update({
+        where: { contractId: score.contractId },
+        data: {
+          totalScore: newTotal,
+          category: newCategory,
+        },
+      });
+    }
   }
 
   return {
@@ -2563,6 +4203,32 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     consolidateAll,
     getContractsByScore,
     getConsolidatedStats,
+    // Round Number score
+    calculateRoundNumberScore,
+    calculateRoundNumberScoreAndSave,
+    processRoundNumberBatch,
+    processAllRoundNumbers,
+    resetRoundNumberScores,
+    // Timing score
+    calculateTimingScore,
+    calculateTimingScoreAndSave,
+    processTimingBatch,
+    processAllTimings,
+    resetTimingScores,
+    // Fragmentation score
+    calculateFragmentationScore,
+    calculateFragmentationScoreAndSave,
+    processFragmentationBatch,
+    processAllFragmentations,
+    resetFragmentationScores,
+    // Description score
+    calculateDescriptionScore,
+    calculateDescriptionScoreAndSave,
+    processDescriptionBatch,
+    processAllDescriptions,
+    resetDescriptionScores,
+    // Helpers
+    recalculateAllTotals,
     config: finalConfig,
   };
 }

@@ -18,7 +18,7 @@ export const agenciesRouter = new OpenAPIHono();
 const ScoreBreakdownItemSchema = z
   .object({
     criterion: z
-      .enum(["value", "amendment", "concentration", "duration"])
+      .enum(["value", "amendment", "concentration", "duration", "timing", "roundNumber", "fragmentation", "description"])
       .openapi({
         description: "Criterion being evaluated",
         example: "duration",
@@ -41,8 +41,8 @@ const ScoreBreakdownItemSchema = z
 // Anomaly score schema
 const AnomalyScoreSchema = z
   .object({
-    totalScore: z.number().int().min(0).max(100).openapi({
-      description: "Total anomaly score (0-100)",
+    totalScore: z.number().int().min(0).max(200).openapi({
+      description: "Total anomaly score (0-200). 8 criteria x 25 pts each",
       example: 55,
     }),
     category: z.enum(["LOW", "MEDIUM", "HIGH"]).openapi({

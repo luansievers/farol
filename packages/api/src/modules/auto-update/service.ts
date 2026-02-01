@@ -225,6 +225,8 @@ export function createAutoUpdateService(
 
   /**
    * Recalculates scores for a list of contracts
+   * Calculates all 8 criteria: value, amendment, concentration, duration,
+   * timing, roundNumber, fragmentation, description
    */
   async function recalculateScores(
     contractIds: string[]
@@ -240,13 +242,18 @@ export function createAutoUpdateService(
         });
 
         if (existingScore) {
-          // Recalculate all scores
+          // Recalculate all 8 scores
           await anomalyService.recalculateValueScore(contractId);
           await anomalyService.recalculateAmendmentScore(contractId);
           await anomalyService.recalculateConcentrationScore(contractId);
           await anomalyService.recalculateDurationScore(contractId);
+          // New criteria
+          await anomalyService.calculateTimingScoreAndSave(contractId);
+          await anomalyService.calculateRoundNumberScoreAndSave(contractId);
+          await anomalyService.calculateFragmentationScoreAndSave(contractId);
+          await anomalyService.calculateDescriptionScoreAndSave(contractId);
         } else {
-          // Create initial scores
+          // Create initial scores - value score first
           await anomalyService.calculateValueScoreAndSave(contractId);
 
           // The other scores need value score first, then can be calculated
@@ -255,9 +262,15 @@ export function createAutoUpdateService(
           });
 
           if (updatedScore) {
+            // Original 4 criteria
             await anomalyService.calculateAmendmentScoreAndSave(contractId);
             await anomalyService.calculateConcentrationScoreAndSave(contractId);
             await anomalyService.calculateDurationScoreAndSave(contractId);
+            // New 4 criteria
+            await anomalyService.calculateTimingScoreAndSave(contractId);
+            await anomalyService.calculateRoundNumberScoreAndSave(contractId);
+            await anomalyService.calculateFragmentationScoreAndSave(contractId);
+            await anomalyService.calculateDescriptionScoreAndSave(contractId);
           }
         }
 

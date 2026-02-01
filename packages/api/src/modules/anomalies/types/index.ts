@@ -186,7 +186,7 @@ export type ScoreCategory = "LOW" | "MEDIUM" | "HIGH";
 
 // Individual score breakdown item (US-014)
 export interface ScoreBreakdownItem {
-  criterion: "value" | "amendment" | "concentration" | "duration";
+  criterion: "value" | "amendment" | "concentration" | "duration" | "timing" | "roundNumber" | "fragmentation" | "description";
   score: number;
   reason: string | null;
   isContributing: boolean; // score > 0
@@ -231,4 +231,94 @@ export interface ContractScoreListResult {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+// Round Number score calculation result
+export interface RoundNumberScoreResult {
+  score: number; // 0-25
+  reason: string;
+  isAnomaly: boolean;
+  stats: RoundNumberStats | null;
+}
+
+export interface RoundNumberStats {
+  value: number;
+  isMultipleOf100k: boolean;
+  isMultipleOf10k: boolean;
+  isMultipleOf1k: boolean;
+  hasNoCents: boolean;
+  roundnessFlags: string[];
+}
+
+// Timing score calculation result
+export interface TimingScoreResult {
+  score: number; // 0-25
+  reason: string;
+  isAnomaly: boolean;
+  stats: TimingStats | null;
+}
+
+export interface TimingStats {
+  signatureDate: Date | null;
+  publicationDate: Date | null;
+  isDecember: boolean;
+  isLastWeekOfDecember: boolean;
+  isWeekend: boolean;
+  daysFromPublicationToSignature: number | null;
+  timingFlags: string[];
+}
+
+// Fragmentation score calculation result
+export interface FragmentationScoreResult {
+  score: number; // 0-25
+  reason: string;
+  isAnomaly: boolean;
+  stats: FragmentationStats | null;
+}
+
+export interface FragmentationStats {
+  supplierId: string;
+  agencyId: string;
+  contractsIn30Days: number;
+  isNearDispensaLimit: boolean;
+  similarContracts: number;
+  fragmentationFlags: string[];
+}
+
+// Description score calculation result (LLM-based)
+export interface DescriptionScoreResult {
+  score: number; // 0-25
+  reason: string;
+  isAnomaly: boolean;
+  stats: DescriptionStats | null;
+}
+
+export interface DescriptionStats {
+  objectLength: number;
+  isTooGeneric: boolean;
+  hasSpecificBrand: boolean;
+  hasVagueTerms: boolean;
+  isOverlySpecific: boolean;
+  descriptionFlags: string[];
+}
+
+// Full anomaly score result with all 8 criteria
+export interface FullAnomalyScoreWithAllCriteria {
+  contractId: string;
+  valueScore: number;
+  valueReason: string;
+  amendmentScore: number;
+  amendmentReason: string;
+  concentrationScore: number;
+  concentrationReason: string;
+  durationScore: number;
+  durationReason: string;
+  timingScore: number;
+  timingReason: string;
+  roundNumberScore: number;
+  roundNumberReason: string;
+  fragmentationScore: number;
+  fragmentationReason: string;
+  descriptionScore: number;
+  descriptionReason: string;
 }

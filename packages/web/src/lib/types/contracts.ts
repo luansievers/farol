@@ -72,7 +72,7 @@ export interface SupplierDto {
 }
 
 export interface ScoreBreakdownItem {
-  criterion: "value" | "amendment" | "concentration" | "duration";
+  criterion: "value" | "amendment" | "concentration" | "duration" | "timing" | "roundNumber" | "fragmentation" | "description";
   score: number;
   reason: string | null;
   isContributing: boolean;

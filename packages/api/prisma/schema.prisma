@@ -147,7 +147,7 @@ model Amendment {
 // Anomaly score breakdown for each contract
 model AnomalyScore {
   id              String   @id @default(cuid())
-  totalScore      Int      @map("total_score") // 0-100
+  totalScore      Int      @map("total_score") // 0-200 (8 criteria x 25 pts)
   category        String   // LOW, MEDIUM, HIGH
 
   // Individual scores (0-25 each)
@@ -162,6 +162,19 @@ model AnomalyScore {
 
   durationScore   Int      @map("duration_score")
   durationReason  String?  @map("duration_reason")
+
+  // New criteria
+  timingScore         Int?     @map("timing_score")
+  timingReason        String?  @map("timing_reason")
+
+  roundNumberScore    Int?     @map("round_number_score")
+  roundNumberReason   String?  @map("round_number_reason")
+
+  fragmentationScore  Int?     @map("fragmentation_score")
+  fragmentationReason String?  @map("fragmentation_reason")
+
+  descriptionScore    Int?     @map("description_score")
+  descriptionReason   String?  @map("description_reason")
 
   calculatedAt    DateTime @default(now()) @map("calculated_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
