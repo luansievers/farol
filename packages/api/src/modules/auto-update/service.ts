@@ -12,6 +12,7 @@
 
 import { prisma } from "@modules/database/index.js";
 import { createCrawlerService } from "@modules/crawler/service.js";
+import { createClassificationService } from "@modules/classification/service.js";
 import { createAnomalyService } from "@modules/anomalies/service.js";
 import type { Result } from "@shared/types/index.js";
 import type {
@@ -43,6 +44,10 @@ export function createAutoUpdateService(
     pageSize: 500,
     maxRetries: 3,
     timeout: 30000,
+  });
+  const classificationService = createClassificationService({
+    batchSize: 50,
+    useAIFallback: true,
   });
   const anomalyService = createAnomalyService();
 
@@ -286,6 +291,7 @@ export function createAutoUpdateService(
 
     const steps: ExecutionStep[] = [
       createStep("fetch_contracts"),
+      createStep("classify_contracts"),
       createStep("recalculate_scores"),
       createStep("consolidate"),
     ];
@@ -306,7 +312,7 @@ export function createAutoUpdateService(
         throw new Error("Missing fetch step");
       }
       updateStep(fetchStep, "running");
-      logProgress("Step 1/3: Fetching new contracts...");
+      logProgress("Step 1/4: Fetching new contracts...");
 
       const { startDate, endDate } = await getDateRange();
       logProgress(
@@ -335,13 +341,37 @@ export function createAutoUpdateService(
         `  Completed: ${String(crawlStats.newContracts)} new, ${String(crawlStats.updatedContracts)} updated`
       );
 
-      // Step 2: Recalculate scores for affected contracts
-      const scoreStep = steps[1];
+      // Step 2: Classify contracts
+      const classifyStep = steps[1];
+      if (!classifyStep) {
+        throw new Error("Missing classify step");
+      }
+      updateStep(classifyStep, "running");
+      logProgress("Step 2/4: Classifying contracts...");
+
+      const classifyResult = await classificationService.processAll();
+
+      if (!classifyResult.success) {
+        updateStep(classifyStep, "failed", classifyResult.error.message);
+        metrics.errors++;
+        metrics.lastError = classifyResult.error.message;
+        // Don't throw - classification failure shouldn't stop the job
+        logProgress(`  Classification failed: ${classifyResult.error.message}`);
+      } else {
+        const classifyStats = classifyResult.data;
+        logProgress(
+          `  Completed: ${String(classifyStats.classified)} classified out of ${String(classifyStats.processed)} processed`
+        );
+        updateStep(classifyStep, "success");
+      }
+
+      // Step 3: Recalculate scores for affected contracts
+      const scoreStep = steps[2];
       if (!scoreStep) {
         throw new Error("Missing score step");
       }
       updateStep(scoreStep, "running");
-      logProgress("Step 2/3: Recalculating scores for affected contracts...");
+      logProgress("Step 3/4: Recalculating scores for affected contracts...");
 
       const contractsToRecalc = await getContractsNeedingScoreRecalc();
       logProgress(
@@ -360,13 +390,13 @@ export function createAutoUpdateService(
 
       updateStep(scoreStep, "success");
 
-      // Step 3: Consolidate all scores
-      const consolidateStep = steps[2];
+      // Step 4: Consolidate all scores
+      const consolidateStep = steps[3];
       if (!consolidateStep) {
         throw new Error("Missing consolidate step");
       }
       updateStep(consolidateStep, "running");
-      logProgress("Step 3/3: Consolidating scores...");
+      logProgress("Step 4/4: Consolidating scores...");
 
       const consolidateResult = await anomalyService.consolidateAll();
       if (consolidateResult.success) {
