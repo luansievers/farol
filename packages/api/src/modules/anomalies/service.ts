@@ -2243,7 +2243,10 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       });
     }
 
-    if (score.roundNumberScore !== undefined && score.roundNumberScore !== null) {
+    if (
+      score.roundNumberScore !== undefined &&
+      score.roundNumberScore !== null
+    ) {
       breakdown.push({
         criterion: "roundNumber",
         score: score.roundNumberScore,
@@ -2252,7 +2255,10 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       });
     }
 
-    if (score.fragmentationScore !== undefined && score.fragmentationScore !== null) {
+    if (
+      score.fragmentationScore !== undefined &&
+      score.fragmentationScore !== null
+    ) {
       breakdown.push({
         criterion: "fragmentation",
         score: score.fragmentationScore,
@@ -2261,7 +2267,10 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       });
     }
 
-    if (score.descriptionScore !== undefined && score.descriptionScore !== null) {
+    if (
+      score.descriptionScore !== undefined &&
+      score.descriptionScore !== null
+    ) {
       breakdown.push({
         criterion: "description",
         score: score.descriptionScore,
@@ -2736,9 +2745,16 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Calculates round number score and saves to database
    */
-  async function calculateRoundNumberScoreAndSave(
-    contractId: string
-  ): Promise<Result<{ contractId: string; roundNumberScore: number; roundNumberReason: string }, AnomalyError>> {
+  async function calculateRoundNumberScoreAndSave(contractId: string): Promise<
+    Result<
+      {
+        contractId: string;
+        roundNumberScore: number;
+        roundNumberReason: string;
+      },
+      AnomalyError
+    >
+  > {
     const result = await calculateRoundNumberScore(contractId);
 
     if (!result.success) {
@@ -2817,7 +2833,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Process a batch of contracts for round number score
    */
-  async function processRoundNumberBatch(): Promise<Result<AnomalyStats, AnomalyError>> {
+  async function processRoundNumberBatch(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
     const stats: AnomalyStats = {
       startedAt: new Date(),
       finishedAt: null,
@@ -2832,10 +2850,14 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       `[Anomaly] Starting round number score batch (batch size: ${String(finalConfig.batchSize)})`
     );
 
-    const contracts = await getContractsForRoundNumberScore(finalConfig.batchSize);
+    const contracts = await getContractsForRoundNumberScore(
+      finalConfig.batchSize
+    );
 
     if (contracts.length === 0) {
-      console.log("[Anomaly] No contracts pending round number score calculation");
+      console.log(
+        "[Anomaly] No contracts pending round number score calculation"
+      );
       stats.finishedAt = new Date();
       return { success: true, data: stats };
     }
@@ -2876,7 +2898,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Process all pending contracts for round number score
    */
-  async function processAllRoundNumbers(): Promise<Result<AnomalyStats, AnomalyError>> {
+  async function processAllRoundNumbers(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
     const stats: AnomalyStats = {
       startedAt: new Date(),
       finishedAt: null,
@@ -3086,7 +3110,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
         daysFromPubToSig = daysBetween(publicationDate, signatureDate);
         if (daysFromPubToSig < 3) {
           score += 5;
-          flags.push(`Apenas ${String(daysFromPubToSig)} dia(s) entre publicação e assinatura`);
+          flags.push(
+            `Apenas ${String(daysFromPubToSig)} dia(s) entre publicação e assinatura`
+          );
         }
       }
     }
@@ -3126,7 +3152,12 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
    */
   async function calculateTimingScoreAndSave(
     contractId: string
-  ): Promise<Result<{ contractId: string; timingScore: number; timingReason: string }, AnomalyError>> {
+  ): Promise<
+    Result<
+      { contractId: string; timingScore: number; timingReason: string },
+      AnomalyError
+    >
+  > {
     const result = await calculateTimingScore(contractId);
 
     if (!result.success) {
@@ -3204,7 +3235,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Process a batch of contracts for timing score
    */
-  async function processTimingBatch(): Promise<Result<AnomalyStats, AnomalyError>> {
+  async function processTimingBatch(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
     const stats: AnomalyStats = {
       startedAt: new Date(),
       finishedAt: null,
@@ -3263,7 +3296,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Process all pending contracts for timing score
    */
-  async function processAllTimings(): Promise<Result<AnomalyStats, AnomalyError>> {
+  async function processAllTimings(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
     const stats: AnomalyStats = {
       startedAt: new Date(),
       finishedAt: null,
@@ -3397,12 +3432,22 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   function textSimilarity(text1: string | null, text2: string | null): number {
     if (!text1 || !text2) return 0;
 
-    const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 3));
-    const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+    const words1 = new Set(
+      text1
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length > 3)
+    );
+    const words2 = new Set(
+      text2
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length > 3)
+    );
 
     if (words1.size === 0 || words2.size === 0) return 0;
 
-    const intersection = new Set([...words1].filter(x => words2.has(x)));
+    const intersection = new Set([...words1].filter((x) => words2.has(x)));
     const union = new Set([...words1, ...words2]);
 
     return intersection.size / union.size;
@@ -3436,7 +3481,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     const isNearDispensaLimit = value >= 40000 && value <= DISPENSA_LIMIT;
     if (isNearDispensaLimit) {
       score += 10;
-      flags.push(`Valor próximo ao limite de dispensa (R$ ${value.toLocaleString("pt-BR")})`);
+      flags.push(
+        `Valor próximo ao limite de dispensa (R$ ${value.toLocaleString("pt-BR")})`
+      );
     }
 
     // Find similar contracts with same supplier/agency in 30 days
@@ -3470,7 +3517,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       // Check for 3+ contracts in 30 days
       if (contractsIn30Days >= 3) {
         score += 10;
-        flags.push(`${String(contractsIn30Days + 1)} contratos com mesmo fornecedor/órgão em 30 dias`);
+        flags.push(
+          `${String(contractsIn30Days + 1)} contratos com mesmo fornecedor/órgão em 30 dias`
+        );
       }
 
       // Check for similar objects
@@ -3483,7 +3532,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
 
       if (similarContracts > 0) {
         score += 10;
-        flags.push(`${String(similarContracts)} contrato(s) com objeto similar (>70% similaridade)`);
+        flags.push(
+          `${String(similarContracts)} contrato(s) com objeto similar (>70% similaridade)`
+        );
       }
     }
 
@@ -3521,7 +3572,16 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
    */
   async function calculateFragmentationScoreAndSave(
     contractId: string
-  ): Promise<Result<{ contractId: string; fragmentationScore: number; fragmentationReason: string }, AnomalyError>> {
+  ): Promise<
+    Result<
+      {
+        contractId: string;
+        fragmentationScore: number;
+        fragmentationReason: string;
+      },
+      AnomalyError
+    >
+  > {
     const result = await calculateFragmentationScore(contractId);
 
     if (!result.success) {
@@ -3599,7 +3659,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Process a batch of contracts for fragmentation score
    */
-  async function processFragmentationBatch(): Promise<Result<AnomalyStats, AnomalyError>> {
+  async function processFragmentationBatch(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
     const stats: AnomalyStats = {
       startedAt: new Date(),
       finishedAt: null,
@@ -3614,10 +3676,14 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       `[Anomaly] Starting fragmentation score batch (batch size: ${String(finalConfig.batchSize)})`
     );
 
-    const contracts = await getContractsForFragmentationScore(finalConfig.batchSize);
+    const contracts = await getContractsForFragmentationScore(
+      finalConfig.batchSize
+    );
 
     if (contracts.length === 0) {
-      console.log("[Anomaly] No contracts pending fragmentation score calculation");
+      console.log(
+        "[Anomaly] No contracts pending fragmentation score calculation"
+      );
       stats.finishedAt = new Date();
       return { success: true, data: stats };
     }
@@ -3658,7 +3724,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Process all pending contracts for fragmentation score
    */
-  async function processAllFragmentations(): Promise<Result<AnomalyStats, AnomalyError>> {
+  async function processAllFragmentations(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
     const stats: AnomalyStats = {
       startedAt: new Date(),
       finishedAt: null,
@@ -3843,7 +3911,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
 
     // Check for vague terms
     const objectLower = object.toLowerCase();
-    const hasVagueTerms = VAGUE_TERMS.some(term => objectLower.includes(term));
+    const hasVagueTerms = VAGUE_TERMS.some((term) =>
+      objectLower.includes(term)
+    );
     if (hasVagueTerms) {
       score += 5;
       flags.push("Contém termos vagos");
@@ -3866,7 +3936,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     const isOverlySpecific = objectLength > 2000;
     if (isOverlySpecific) {
       score += 5;
-      flags.push("Descrição excessivamente detalhada (possível direcionamento)");
+      flags.push(
+        "Descrição excessivamente detalhada (possível direcionamento)"
+      );
     }
 
     // Cap at 25
@@ -3883,9 +3955,7 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       descriptionFlags: flags,
     };
 
-    const reason = isAnomaly
-      ? flags.join("; ")
-      : "Descrição adequada";
+    const reason = isAnomaly ? flags.join("; ") : "Descrição adequada";
 
     return {
       success: true,
@@ -3901,9 +3971,16 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Calculates description score and saves to database
    */
-  async function calculateDescriptionScoreAndSave(
-    contractId: string
-  ): Promise<Result<{ contractId: string; descriptionScore: number; descriptionReason: string }, AnomalyError>> {
+  async function calculateDescriptionScoreAndSave(contractId: string): Promise<
+    Result<
+      {
+        contractId: string;
+        descriptionScore: number;
+        descriptionReason: string;
+      },
+      AnomalyError
+    >
+  > {
     const result = await calculateDescriptionScore(contractId);
 
     if (!result.success) {
@@ -3981,7 +4058,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Process a batch of contracts for description score
    */
-  async function processDescriptionBatch(): Promise<Result<AnomalyStats, AnomalyError>> {
+  async function processDescriptionBatch(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
     const stats: AnomalyStats = {
       startedAt: new Date(),
       finishedAt: null,
@@ -3996,10 +4075,14 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
       `[Anomaly] Starting description score batch (batch size: ${String(finalConfig.batchSize)})`
     );
 
-    const contracts = await getContractsForDescriptionScore(finalConfig.batchSize);
+    const contracts = await getContractsForDescriptionScore(
+      finalConfig.batchSize
+    );
 
     if (contracts.length === 0) {
-      console.log("[Anomaly] No contracts pending description score calculation");
+      console.log(
+        "[Anomaly] No contracts pending description score calculation"
+      );
       stats.finishedAt = new Date();
       return { success: true, data: stats };
     }
@@ -4040,7 +4123,9 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
   /**
    * Process all pending contracts for description score
    */
-  async function processAllDescriptions(): Promise<Result<AnomalyStats, AnomalyError>> {
+  async function processAllDescriptions(): Promise<
+    Result<AnomalyStats, AnomalyError>
+  > {
     const stats: AnomalyStats = {
       startedAt: new Date(),
       finishedAt: null,

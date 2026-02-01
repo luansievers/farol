@@ -18,7 +18,16 @@ export const agenciesRouter = new OpenAPIHono();
 const ScoreBreakdownItemSchema = z
   .object({
     criterion: z
-      .enum(["value", "amendment", "concentration", "duration", "timing", "roundNumber", "fragmentation", "description"])
+      .enum([
+        "value",
+        "amendment",
+        "concentration",
+        "duration",
+        "timing",
+        "roundNumber",
+        "fragmentation",
+        "description",
+      ])
       .openapi({
         description: "Criterion being evaluated",
         example: "duration",

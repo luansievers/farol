@@ -186,7 +186,15 @@ export type ScoreCategory = "LOW" | "MEDIUM" | "HIGH";
 
 // Individual score breakdown item (US-014)
 export interface ScoreBreakdownItem {
-  criterion: "value" | "amendment" | "concentration" | "duration" | "timing" | "roundNumber" | "fragmentation" | "description";
+  criterion:
+    | "value"
+    | "amendment"
+    | "concentration"
+    | "duration"
+    | "timing"
+    | "roundNumber"
+    | "fragmentation"
+    | "description";
   score: number;
   reason: string | null;
   isContributing: boolean; // score > 0

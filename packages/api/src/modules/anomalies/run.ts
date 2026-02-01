@@ -453,9 +453,15 @@ async function main() {
           );
           console.log(`  Duration: ${String(stats.byCriterion.duration)}`);
           console.log(`  Timing: ${String(stats.byCriterion.timing)}`);
-          console.log(`  Round Number: ${String(stats.byCriterion.roundNumber)}`);
-          console.log(`  Fragmentation: ${String(stats.byCriterion.fragmentation)}`);
-          console.log(`  Description: ${String(stats.byCriterion.description)}`);
+          console.log(
+            `  Round Number: ${String(stats.byCriterion.roundNumber)}`
+          );
+          console.log(
+            `  Fragmentation: ${String(stats.byCriterion.fragmentation)}`
+          );
+          console.log(
+            `  Description: ${String(stats.byCriterion.description)}`
+          );
           break;
         }
 
@@ -584,7 +590,9 @@ async function main() {
         }
 
         case "batch": {
-          console.log("Processing batch of contracts for round number score...\n");
+          console.log(
+            "Processing batch of contracts for round number score...\n"
+          );
           const result = await service.processRoundNumberBatch();
           if (!result.success) {
             console.error("Error:", result.error.message);
@@ -596,12 +604,16 @@ async function main() {
         case "reset": {
           console.log("Resetting round number scores...\n");
           const count = await service.resetRoundNumberScores();
-          console.log(`Reset round number scores for ${String(count)} contracts`);
+          console.log(
+            `Reset round number scores for ${String(count)} contracts`
+          );
           break;
         }
 
         default: {
-          console.log(`Calculating round number score for contract ${subCommand}...\n`);
+          console.log(
+            `Calculating round number score for contract ${subCommand}...\n`
+          );
           const result = await service.calculateRoundNumberScore(subCommand);
           if (result.success) {
             console.log(`Score: ${String(result.data.score)}/25`);
@@ -609,11 +621,21 @@ async function main() {
             console.log(`Reason: ${result.data.reason}`);
             if (result.data.stats) {
               console.log("\nStatistics:");
-              console.log(`  Value: R$ ${result.data.stats.value.toLocaleString("pt-BR")}`);
-              console.log(`  Multiple of 100k: ${String(result.data.stats.isMultipleOf100k)}`);
-              console.log(`  Multiple of 10k: ${String(result.data.stats.isMultipleOf10k)}`);
-              console.log(`  Multiple of 1k: ${String(result.data.stats.isMultipleOf1k)}`);
-              console.log(`  Has No Cents: ${String(result.data.stats.hasNoCents)}`);
+              console.log(
+                `  Value: R$ ${result.data.stats.value.toLocaleString("pt-BR")}`
+              );
+              console.log(
+                `  Multiple of 100k: ${String(result.data.stats.isMultipleOf100k)}`
+              );
+              console.log(
+                `  Multiple of 10k: ${String(result.data.stats.isMultipleOf10k)}`
+              );
+              console.log(
+                `  Multiple of 1k: ${String(result.data.stats.isMultipleOf1k)}`
+              );
+              console.log(
+                `  Has No Cents: ${String(result.data.stats.hasNoCents)}`
+              );
             }
           } else {
             console.error("Error:", result.error.message);
@@ -657,7 +679,9 @@ async function main() {
         }
 
         default: {
-          console.log(`Calculating timing score for contract ${subCommand}...\n`);
+          console.log(
+            `Calculating timing score for contract ${subCommand}...\n`
+          );
           const result = await service.calculateTimingScore(subCommand);
           if (result.success) {
             console.log(`Score: ${String(result.data.score)}/25`);
@@ -665,12 +689,24 @@ async function main() {
             console.log(`Reason: ${result.data.reason}`);
             if (result.data.stats) {
               console.log("\nStatistics:");
-              console.log(`  Signature Date: ${result.data.stats.signatureDate?.toISOString() ?? "N/A"}`);
-              console.log(`  Publication Date: ${result.data.stats.publicationDate?.toISOString() ?? "N/A"}`);
-              console.log(`  Is December: ${String(result.data.stats.isDecember)}`);
-              console.log(`  Last Week of December: ${String(result.data.stats.isLastWeekOfDecember)}`);
-              console.log(`  Is Weekend: ${String(result.data.stats.isWeekend)}`);
-              console.log(`  Days from Pub to Sig: ${result.data.stats.daysFromPublicationToSignature ?? "N/A"}`);
+              console.log(
+                `  Signature Date: ${result.data.stats.signatureDate?.toISOString() ?? "N/A"}`
+              );
+              console.log(
+                `  Publication Date: ${result.data.stats.publicationDate?.toISOString() ?? "N/A"}`
+              );
+              console.log(
+                `  Is December: ${String(result.data.stats.isDecember)}`
+              );
+              console.log(
+                `  Last Week of December: ${String(result.data.stats.isLastWeekOfDecember)}`
+              );
+              console.log(
+                `  Is Weekend: ${String(result.data.stats.isWeekend)}`
+              );
+              console.log(
+                `  Days from Pub to Sig: ${result.data.stats.daysFromPublicationToSignature ?? "N/A"}`
+              );
             }
           } else {
             console.error("Error:", result.error.message);
@@ -697,7 +733,9 @@ async function main() {
         }
 
         case "batch": {
-          console.log("Processing batch of contracts for fragmentation score...\n");
+          console.log(
+            "Processing batch of contracts for fragmentation score...\n"
+          );
           const result = await service.processFragmentationBatch();
           if (!result.success) {
             console.error("Error:", result.error.message);
@@ -709,12 +747,16 @@ async function main() {
         case "reset": {
           console.log("Resetting fragmentation scores...\n");
           const count = await service.resetFragmentationScores();
-          console.log(`Reset fragmentation scores for ${String(count)} contracts`);
+          console.log(
+            `Reset fragmentation scores for ${String(count)} contracts`
+          );
           break;
         }
 
         default: {
-          console.log(`Calculating fragmentation score for contract ${subCommand}...\n`);
+          console.log(
+            `Calculating fragmentation score for contract ${subCommand}...\n`
+          );
           const result = await service.calculateFragmentationScore(subCommand);
           if (result.success) {
             console.log(`Score: ${String(result.data.score)}/25`);
@@ -722,9 +764,15 @@ async function main() {
             console.log(`Reason: ${result.data.reason}`);
             if (result.data.stats) {
               console.log("\nStatistics:");
-              console.log(`  Contracts in 30 days: ${String(result.data.stats.contractsIn30Days)}`);
-              console.log(`  Near Dispensa Limit: ${String(result.data.stats.isNearDispensaLimit)}`);
-              console.log(`  Similar Contracts: ${String(result.data.stats.similarContracts)}`);
+              console.log(
+                `  Contracts in 30 days: ${String(result.data.stats.contractsIn30Days)}`
+              );
+              console.log(
+                `  Near Dispensa Limit: ${String(result.data.stats.isNearDispensaLimit)}`
+              );
+              console.log(
+                `  Similar Contracts: ${String(result.data.stats.similarContracts)}`
+              );
             }
           } else {
             console.error("Error:", result.error.message);
@@ -751,7 +799,9 @@ async function main() {
         }
 
         case "batch": {
-          console.log("Processing batch of contracts for description score...\n");
+          console.log(
+            "Processing batch of contracts for description score...\n"
+          );
           const result = await service.processDescriptionBatch();
           if (!result.success) {
             console.error("Error:", result.error.message);
@@ -763,12 +813,16 @@ async function main() {
         case "reset": {
           console.log("Resetting description scores...\n");
           const count = await service.resetDescriptionScores();
-          console.log(`Reset description scores for ${String(count)} contracts`);
+          console.log(
+            `Reset description scores for ${String(count)} contracts`
+          );
           break;
         }
 
         default: {
-          console.log(`Calculating description score for contract ${subCommand}...\n`);
+          console.log(
+            `Calculating description score for contract ${subCommand}...\n`
+          );
           const result = await service.calculateDescriptionScore(subCommand);
           if (result.success) {
             console.log(`Score: ${String(result.data.score)}/25`);
@@ -776,11 +830,21 @@ async function main() {
             console.log(`Reason: ${result.data.reason}`);
             if (result.data.stats) {
               console.log("\nStatistics:");
-              console.log(`  Object Length: ${String(result.data.stats.objectLength)} chars`);
-              console.log(`  Is Too Generic: ${String(result.data.stats.isTooGeneric)}`);
-              console.log(`  Has Specific Brand: ${String(result.data.stats.hasSpecificBrand)}`);
-              console.log(`  Has Vague Terms: ${String(result.data.stats.hasVagueTerms)}`);
-              console.log(`  Is Overly Specific: ${String(result.data.stats.isOverlySpecific)}`);
+              console.log(
+                `  Object Length: ${String(result.data.stats.objectLength)} chars`
+              );
+              console.log(
+                `  Is Too Generic: ${String(result.data.stats.isTooGeneric)}`
+              );
+              console.log(
+                `  Has Specific Brand: ${String(result.data.stats.hasSpecificBrand)}`
+              );
+              console.log(
+                `  Has Vague Terms: ${String(result.data.stats.hasVagueTerms)}`
+              );
+              console.log(
+                `  Is Overly Specific: ${String(result.data.stats.isOverlySpecific)}`
+              );
             }
           } else {
             console.error("Error:", result.error.message);
@@ -865,13 +929,9 @@ async function main() {
       console.log(
         "  timing all           - Process all contracts for timing score"
       );
-      console.log(
-        "  timing batch         - Process a batch for timing score"
-      );
+      console.log("  timing batch         - Process a batch for timing score");
       console.log("  timing reset         - Reset timing scores");
-      console.log(
-        "  timing <id>          - Calculate timing score (no save)"
-      );
+      console.log("  timing <id>          - Calculate timing score (no save)");
       console.log("\nFragmentation Score:");
       console.log(
         "  fragmentation all    - Process all contracts for fragmentation score"
