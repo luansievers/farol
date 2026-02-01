@@ -8,11 +8,13 @@
   "scripts": {
     "dev": "pnpm --filter @farol/api api:dev",
     "dev:web": "pnpm --filter @farol/web dev",
+    "dev:landing": "pnpm --filter @farol/web-landing dev",
     "dev:all": "pnpm --parallel --filter './packages/*' dev",
     "build": "pnpm --filter @farol/shared build && pnpm --filter './packages/*' build",
     "build:shared": "pnpm --filter @farol/shared build",
     "build:api": "pnpm --filter @farol/api build",
     "build:web": "pnpm --filter @farol/web build",
+    "build:landing": "pnpm --filter @farol/web-landing build",
     "test": "pnpm --filter './packages/*' test",
     "lint": "pnpm --filter './packages/*' lint",
     "typecheck": "pnpm --filter './packages/*' typecheck",
