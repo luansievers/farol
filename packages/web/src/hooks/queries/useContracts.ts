@@ -34,6 +34,10 @@ async function fetchContracts(
   if (params.endDate) searchParams.set("endDate", params.endDate);
   if (params.minScore !== undefined)
     searchParams.set("minScore", String(params.minScore));
+  if (params.minValue !== undefined)
+    searchParams.set("minValue", String(params.minValue));
+  if (params.maxValue !== undefined)
+    searchParams.set("maxValue", String(params.maxValue));
   if (params.sortBy) searchParams.set("sortBy", params.sortBy);
   if (params.order) searchParams.set("order", params.order);
 

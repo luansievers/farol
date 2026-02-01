@@ -30,7 +30,7 @@ export function ContractFilters({
   return (
     <div className="rounded-lg border bg-card p-4 shadow-sm">
       <h3 className="font-semibold mb-4">Filtros</h3>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-muted-foreground">
             Categoria
@@ -121,6 +121,44 @@ export function ContractFilters({
             value={filters.minScore ?? 0}
             onChange={(e) => updateFilter("minScore", Number(e.target.value))}
             showValue
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-muted-foreground">
+            Valor Minimo (R$)
+          </label>
+          <Input
+            type="number"
+            min={0}
+            step={1000}
+            placeholder="0"
+            value={filters.minValue ?? ""}
+            onChange={(e) =>
+              updateFilter(
+                "minValue",
+                e.target.value ? Number(e.target.value) : undefined
+              )
+            }
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-muted-foreground">
+            Valor Maximo (R$)
+          </label>
+          <Input
+            type="number"
+            min={0}
+            step={1000}
+            placeholder="Sem limite"
+            value={filters.maxValue ?? ""}
+            onChange={(e) =>
+              updateFilter(
+                "maxValue",
+                e.target.value ? Number(e.target.value) : undefined
+              )
+            }
           />
         </div>
       </div>

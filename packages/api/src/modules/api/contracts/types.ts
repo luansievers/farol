@@ -15,6 +15,8 @@ export interface ContractFilters {
   startDate?: Date | undefined;
   endDate?: Date | undefined;
   minScore?: number | undefined;
+  minValue?: number | undefined;
+  maxValue?: number | undefined;
 }
 
 // Sort options for contracts

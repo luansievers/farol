@@ -176,6 +176,8 @@ export interface ContractFilters {
   startDate?: string;
   endDate?: string;
   minScore?: number;
+  minValue?: number;
+  maxValue?: number;
 }
 
 export type ContractSortField = "signatureDate" | "value" | "totalScore";

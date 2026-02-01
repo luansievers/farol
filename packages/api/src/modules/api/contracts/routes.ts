@@ -288,6 +288,14 @@ const ListContractsQuerySchema = z.object({
     description: "Filter contracts with anomaly score >= this value",
     example: 50,
   }),
+  minValue: z.coerce.number().min(0).optional().openapi({
+    description: "Filter contracts with value >= this amount (in BRL)",
+    example: 100000,
+  }),
+  maxValue: z.coerce.number().min(0).optional().openapi({
+    description: "Filter contracts with value <= this amount (in BRL)",
+    example: 5000000,
+  }),
   sortBy: z
     .enum(["signatureDate", "value", "totalScore"])
     .default("signatureDate")
@@ -353,6 +361,8 @@ contractsRouter.openapi(listContractsRoute, async (c) => {
     startDate: query.startDate ? new Date(query.startDate) : undefined,
     endDate: query.endDate ? new Date(query.endDate) : undefined,
     minScore: query.minScore ?? undefined,
+    minValue: query.minValue ?? undefined,
+    maxValue: query.maxValue ?? undefined,
   };
 
   const pagination = {

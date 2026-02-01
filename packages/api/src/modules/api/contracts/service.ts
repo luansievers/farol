@@ -61,6 +61,16 @@ function buildWhereClause(filters: ContractFilters): Prisma.ContractWhereInput {
     };
   }
 
+  if (filters.minValue !== undefined || filters.maxValue !== undefined) {
+    where.value = {};
+    if (filters.minValue !== undefined) {
+      where.value.gte = filters.minValue;
+    }
+    if (filters.maxValue !== undefined) {
+      where.value.lte = filters.maxValue;
+    }
+  }
+
   return where;
 }
 
