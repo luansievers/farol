@@ -56,12 +56,12 @@ export function createClassificationService(
 
   /**
    * Gets contracts pending classification
-   * (category = OUTROS and categoryManual = false)
+   * (classifiedAt is null and categoryManual = false)
    */
   async function getContractsForClassification(limit: number) {
     return prisma.contract.findMany({
       where: {
-        category: "OUTROS",
+        classifiedAt: null,
         categoryManual: false,
       },
       orderBy: {
@@ -280,18 +280,14 @@ export function createClassificationService(
       return result;
     }
 
-    // Don't update if category is still OUTROS
-    if (result.data.category === "OUTROS") {
-      return result;
-    }
-
-    // Save to database
+    // Save to database (always mark as classified, even if category is OUTROS)
     try {
       await prisma.contract.update({
         where: { id: contractId },
         data: {
           category: result.data.category,
           categoryManual: false,
+          classifiedAt: new Date(),
         },
       });
 
@@ -521,7 +517,7 @@ export function createClassificationService(
       // Check if there are more contracts to process
       const remaining = await prisma.contract.count({
         where: {
-          category: "OUTROS",
+          classifiedAt: null,
           categoryManual: false,
         },
       });
@@ -557,7 +553,7 @@ export function createClassificationService(
     const [pending, byCategory, manual] = await Promise.all([
       prisma.contract.count({
         where: {
-          category: "OUTROS",
+          classifiedAt: null,
           categoryManual: false,
         },
       }),
@@ -610,10 +606,11 @@ export function createClassificationService(
     const result = await prisma.contract.updateMany({
       where: {
         categoryManual: false,
-        NOT: { category: "OUTROS" },
+        classifiedAt: { not: null },
       },
       data: {
         category: "OUTROS",
+        classifiedAt: null,
       },
     });
 
@@ -653,10 +650,10 @@ export function createClassificationService(
       };
     }
 
-    // Reset category first
+    // Reset classification
     await prisma.contract.update({
       where: { id: contractId },
-      data: { category: "OUTROS" },
+      data: { category: "OUTROS", classifiedAt: null },
     });
 
     // Re-classify

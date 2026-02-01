@@ -77,6 +77,7 @@ model Contract {
   value             Decimal          @db.Decimal(15, 2) // Total value
   category          ContractCategory @default(OUTROS)
   categoryManual    Boolean          @default(false) @map("category_manual") // Manually set category
+  classifiedAt      DateTime?        @map("classified_at") // When classification was attempted
   modalidade        String?          // Bidding modality
   status            ContractStatus   @default(ACTIVE)
   processingStatus  ProcessingStatus @default(PENDING) @map("processing_status")
