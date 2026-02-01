@@ -198,7 +198,6 @@ export function ContractComparison({
         <ListView
           similarContracts={similarContracts}
           referenceValue={referenceContract.value}
-          averageValue={statistics.average}
         />
       )}
     </div>

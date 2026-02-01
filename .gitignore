@@ -27,4 +27,5 @@ pnpm-debug.log*
 # Test coverage
 coverage/
 
-/src/generated/prisma
+# Prisma generated client
+**/generated/prisma

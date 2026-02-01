@@ -78,13 +78,13 @@ export function GlobalSearch({ className }: GlobalSearchProps) {
     setOpen(false);
     switch (item.type) {
       case "contract":
-        navigate({ to: "/contratos/$id", params: { id: item.id } });
+        navigate({ to: "/contratos/$contractId", params: { contractId: item.id } });
         break;
       case "supplier":
-        navigate({ to: "/fornecedores/$id", params: { id: item.id } });
+        navigate({ to: "/fornecedores/$supplierId", params: { supplierId: item.id } });
         break;
       case "agency":
-        navigate({ to: "/orgaos/$id", params: { id: item.id } });
+        navigate({ to: "/orgaos/$agencyId", params: { agencyId: item.id } });
         break;
     }
   };

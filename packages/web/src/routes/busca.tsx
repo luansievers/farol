@@ -259,8 +259,8 @@ function ResultSection({
 function ContractResultCard({ contract }: { contract: ContractSearchResult }) {
   return (
     <Link
-      to="/contratos/$id"
-      params={{ id: contract.id }}
+      to="/contratos/$contractId"
+      params={{ contractId: contract.id }}
       className="block rounded-lg border p-4 transition-colors hover:bg-accent/50"
     >
       <div className="flex items-start justify-between gap-4">
@@ -296,8 +296,8 @@ function ContractResultCard({ contract }: { contract: ContractSearchResult }) {
 function SupplierResultCard({ supplier }: { supplier: SupplierSearchResult }) {
   return (
     <Link
-      to="/fornecedores/$id"
-      params={{ id: supplier.id }}
+      to="/fornecedores/$supplierId"
+      params={{ supplierId: supplier.id }}
       className="block rounded-lg border p-4 transition-colors hover:bg-accent/50"
     >
       <div className="font-medium">{supplier.label}</div>
@@ -316,8 +316,8 @@ function SupplierResultCard({ supplier }: { supplier: SupplierSearchResult }) {
 function AgencyResultCard({ agency }: { agency: AgencySearchResult }) {
   return (
     <Link
-      to="/orgaos/$id"
-      params={{ id: agency.id }}
+      to="/orgaos/$agencyId"
+      params={{ agencyId: agency.id }}
       className="block rounded-lg border p-4 transition-colors hover:bg-accent/50"
     >
       <div className="font-medium">{agency.label}</div>

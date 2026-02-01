@@ -7,7 +7,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@farol/shared": ["../shared/src/index.ts"],
+      "@farol/shared/*": ["../shared/src/*"]
     }
   }
 }
