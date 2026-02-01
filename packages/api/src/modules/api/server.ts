@@ -11,6 +11,7 @@ import { contractsRouter } from "./contracts/index.js";
 import { suppliersRouter } from "./suppliers/index.js";
 import { agenciesRouter } from "./agencies/index.js";
 import { searchRouter } from "./search/index.js";
+import { statsRouter } from "./stats/index.js";
 import "dotenv/config";
 
 // Create app with OpenAPI support
@@ -26,6 +27,7 @@ app.route("/api/contracts", contractsRouter);
 app.route("/api/suppliers", suppliersRouter);
 app.route("/api/agencies", agenciesRouter);
 app.route("/api/search", searchRouter);
+app.route("/api/stats", statsRouter);
 
 // OpenAPI documentation endpoint
 app.doc("/api/docs/openapi.json", {
@@ -116,6 +118,10 @@ Total score ranges from 0-100, categorized as LOW (0-33), MEDIUM (34-66), or HIG
     {
       name: "Search",
       description: "Global search across all entities",
+    },
+    {
+      name: "Stats",
+      description: "Dashboard statistics and aggregated metrics",
     },
   ],
 });

@@ -1,10 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useStats, useContracts } from "@/hooks/queries";
+import { StatsCards, RecentContracts } from "@/components/dashboard";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
 function HomePage() {
+  const { data: stats, isLoading: isLoadingStats } = useStats();
+  const { data: contractsData, isLoading: isLoadingContracts } = useContracts({
+    page: 1,
+    pageSize: 5,
+    sortBy: "signatureDate",
+    order: "desc",
+  });
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -16,38 +26,12 @@ function HomePage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">
-            Total de Contratos
-          </div>
-          <div className="text-2xl font-bold">-</div>
-        </div>
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">
-            Com Anomalias
-          </div>
-          <div className="text-2xl font-bold">-</div>
-        </div>
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">
-            Fornecedores
-          </div>
-          <div className="text-2xl font-bold">-</div>
-        </div>
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">Orgaos</div>
-          <div className="text-2xl font-bold">-</div>
-        </div>
-      </div>
+      <StatsCards stats={stats} isLoading={isLoadingStats} />
 
-      <div className="rounded-lg border bg-card p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Contratos Recentes</h2>
-        <p className="text-muted-foreground">
-          Os contratos serao exibidos aqui quando a aplicacao estiver conectada a
-          API.
-        </p>
-      </div>
+      <RecentContracts
+        contracts={contractsData?.data}
+        isLoading={isLoadingContracts}
+      />
     </div>
   );
 }
