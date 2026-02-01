@@ -51,8 +51,16 @@ function buildScoreBreakdown(score: {
   concentrationReason: string | null;
   durationScore: number;
   durationReason: string | null;
+  timingScore: number | null;
+  timingReason: string | null;
+  roundNumberScore: number | null;
+  roundNumberReason: string | null;
+  fragmentationScore: number | null;
+  fragmentationReason: string | null;
+  descriptionScore: number | null;
+  descriptionReason: string | null;
 }): ScoreBreakdownItem[] {
-  return [
+  const breakdown: ScoreBreakdownItem[] = [
     {
       criterion: "value",
       score: score.valueScore,
@@ -78,6 +86,44 @@ function buildScoreBreakdown(score: {
       isContributing: score.durationScore > 0,
     },
   ];
+
+  if (score.timingScore !== null) {
+    breakdown.push({
+      criterion: "timing",
+      score: score.timingScore,
+      reason: score.timingReason,
+      isContributing: score.timingScore > 0,
+    });
+  }
+
+  if (score.roundNumberScore !== null) {
+    breakdown.push({
+      criterion: "roundNumber",
+      score: score.roundNumberScore,
+      reason: score.roundNumberReason,
+      isContributing: score.roundNumberScore > 0,
+    });
+  }
+
+  if (score.fragmentationScore !== null) {
+    breakdown.push({
+      criterion: "fragmentation",
+      score: score.fragmentationScore,
+      reason: score.fragmentationReason,
+      isContributing: score.fragmentationScore > 0,
+    });
+  }
+
+  if (score.descriptionScore !== null) {
+    breakdown.push({
+      criterion: "description",
+      score: score.descriptionScore,
+      reason: score.descriptionReason,
+      isContributing: score.descriptionScore > 0,
+    });
+  }
+
+  return breakdown;
 }
 
 // Transform anomaly score to DTO
@@ -93,6 +139,14 @@ function transformAnomalyScore(
     concentrationReason: string | null;
     durationScore: number;
     durationReason: string | null;
+    timingScore: number | null;
+    timingReason: string | null;
+    roundNumberScore: number | null;
+    roundNumberReason: string | null;
+    fragmentationScore: number | null;
+    fragmentationReason: string | null;
+    descriptionScore: number | null;
+    descriptionReason: string | null;
     calculatedAt: Date;
   } | null
 ): AnomalyScoreDto | null {
@@ -279,6 +333,14 @@ export function createSupplierService(): SupplierService {
                     concentrationReason: true,
                     durationScore: true,
                     durationReason: true,
+                    timingScore: true,
+                    timingReason: true,
+                    roundNumberScore: true,
+                    roundNumberReason: true,
+                    fragmentationScore: true,
+                    fragmentationReason: true,
+                    descriptionScore: true,
+                    descriptionReason: true,
                     calculatedAt: true,
                   },
                 },
