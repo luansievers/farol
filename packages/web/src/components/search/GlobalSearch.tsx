@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search,
@@ -7,6 +8,7 @@ import {
   Building,
   Loader2,
   Command,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -141,9 +143,9 @@ export function GlobalSearch({ className }: GlobalSearchProps) {
         </kbd>
       </Button>
 
-      {/* Search Dialog */}
-      {open && (
-        <div className="fixed inset-0 z-50">
+      {/* Search Dialog - Portal to body */}
+      {open && createPortal(
+        <div className="fixed inset-0 z-[100]">
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
@@ -151,22 +153,30 @@ export function GlobalSearch({ className }: GlobalSearchProps) {
           />
 
           {/* Dialog */}
-          <div className="fixed left-1/2 top-[15vh] z-50 w-full max-w-lg -translate-x-1/2 px-4">
-            <div className="rounded-lg border bg-background shadow-lg">
+          <div className="fixed left-1/2 top-[15vh] z-[101] w-full max-w-lg -translate-x-1/2 px-4">
+            <div className="overflow-hidden rounded-xl border bg-background shadow-2xl">
               {/* Search Input */}
-              <div className="flex items-center border-b px-3">
-                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="flex items-center gap-2 border-b px-4 py-3">
+                <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
                 <Input
                   ref={inputRef}
                   placeholder="Buscar contratos, fornecedores, órgãos..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="flex-1 border-0 bg-transparent text-base focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
                 {isLoading && (
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 )}
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label="Fechar busca"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
 
               {/* Results */}
@@ -225,22 +235,33 @@ export function GlobalSearch({ className }: GlobalSearchProps) {
               </div>
 
               {/* Footer */}
-              {query.length >= 2 && (
-                <div className="border-t p-2">
+              <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-2">
+                {query.length >= 2 ? (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start text-muted-foreground"
+                    className="justify-start text-muted-foreground hover:text-foreground"
                     onClick={handleSearchClick}
                   >
                     <Search className="mr-2 h-4 w-4" />
                     Ver todos os resultados para "{query}"
                   </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    Digite para buscar
+                  </span>
+                )}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <kbd className="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px]">
+                    ESC
+                  </kbd>
+                  <span>para fechar</span>
                 </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
