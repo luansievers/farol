@@ -48,6 +48,23 @@ function formatCNPJ(cnpj: string): string {
   );
 }
 
+/**
+ * Builds PNCP portal URL from externalId
+ * externalId format: CNPJ-type-sequencial/year (e.g., "44705055000172-2-000010/2024")
+ * Portal URL format: /app/contratos/{cnpj}/{year}/{sequencial}
+ */
+function buildPncpPortalUrl(externalId: string): string {
+  const match = externalId.match(/^(\d{14})-\d+-(\d+)\/(\d{4})$/);
+  if (!match) {
+    // Fallback to old format if parsing fails
+    return `https://pncp.gov.br/app/contratos/${externalId}`;
+  }
+  const [, cnpj, sequencial, year] = match;
+  // Remove leading zeros from sequencial
+  const seq = parseInt(sequencial, 10);
+  return `https://pncp.gov.br/app/contratos/${cnpj}/${year}/${seq}`;
+}
+
 // Calculate date range for period filter
 function getPeriodDates(period: PeriodFilter): { startDate?: string; endDate?: string } {
   if (period === "all") return {};
@@ -121,7 +138,7 @@ function ContractDetailPage() {
     );
   }
 
-  const portalUrl = `https://pncp.gov.br/app/contrato/${contract.externalId}`;
+  const portalUrl = buildPncpPortalUrl(contract.externalId);
 
   return (
     <div className="space-y-6">

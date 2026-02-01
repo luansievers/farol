@@ -89,8 +89,9 @@ describe("normalizeContract", () => {
   it("should build contract link from control number", () => {
     const result = normalizeContract(mockContract);
 
+    // URL format: /app/contratos/{cnpj}/{year}/{sequencial}
     expect(result.pdfUrl).toBe(
-      "https://pncp.gov.br/app/contrato/12345678901234-1-000001/2024"
+      "https://pncp.gov.br/app/contratos/12345678901234/2024/1"
     );
   });
 

@@ -29,16 +29,29 @@ function normalizeCnpj(cnpj: string): string {
 }
 
 /**
- * Builds PNCP contract link
+ * Builds PNCP portal contract link
+ * numeroControlePNCP format: CNPJ-type-sequencial/year (e.g., "44705055000172-2-000010/2024")
+ * Portal URL format: /app/contratos/{cnpj}/{year}/{sequencial}
  */
 function buildContractLink(contract: PncpContractResponse): string | null {
   if (contract.linkContrato) {
     return contract.linkContrato;
   }
 
-  // Build link from control number if available
+  // Parse numeroControlePNCP to build correct portal URL
   if (contract.numeroControlePNCP) {
-    return `https://pncp.gov.br/app/contrato/${contract.numeroControlePNCP}`;
+    const match = /^(\d{14})-\d+-(\d+)\/(\d{4})$/.exec(
+      contract.numeroControlePNCP
+    );
+    if (match?.[1] && match[2] && match[3]) {
+      const cnpj = match[1];
+      const sequencial = match[2];
+      const year = match[3];
+      const seq = parseInt(sequencial, 10);
+      return `https://pncp.gov.br/app/contratos/${cnpj}/${year}/${seq}`;
+    }
+    // Fallback to old format if parsing fails
+    return `https://pncp.gov.br/app/contratos/${contract.numeroControlePNCP}`;
   }
 
   return null;
