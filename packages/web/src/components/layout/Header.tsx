@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { ThemeToggle } from "@/components/theme";
 
 export function Header() {
   return (
@@ -26,6 +27,7 @@ export function Header() {
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <GlobalSearch />
+          <ThemeToggle />
         </div>
       </div>
     </header>

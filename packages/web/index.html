@@ -5,6 +5,25 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔦</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Farol - Radar de Contratos</title>
+    <script>
+      // Anti-flash: apply theme before React loads. Keep in sync with useTheme.ts
+      (function() {
+        try {
+          var stored = localStorage.getItem('theme-preference');
+          var theme = stored === 'light' || stored === 'dark'
+            ? stored
+            : (stored === 'system' || !stored) && window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+          if (theme === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) {
+          // localStorage unavailable - fall back to system preference
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          }
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
