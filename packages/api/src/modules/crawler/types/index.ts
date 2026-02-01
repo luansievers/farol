@@ -33,7 +33,7 @@ export interface PncpContractResponse {
   nomeRazaoSocialFornecedor: string;
   codigoPaisFornecedor: string;
   categoriaProcesso: string;
-  tipoContrato: string;
+  tipoContrato: string | { id: number; nome: string };
   objetoContrato: string;
   processo: string;
   valorInicial: number;
@@ -153,7 +153,7 @@ export interface PncpContractDetailResponse {
   valorGlobal: number;
   valorAcumulado: number;
   objetoContrato: string;
-  tipoContrato: string;
+  tipoContrato: string | { id: number; nome: string };
   categoriaProcesso: string;
   processo: string;
   orgaoEntidade: {

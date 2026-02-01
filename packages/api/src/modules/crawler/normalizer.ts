@@ -45,6 +45,21 @@ function buildContractLink(contract: PncpContractResponse): string | null {
 }
 
 /**
+ * Extracts modalidade string from tipoContrato field
+ * Handles both old format (string) and new format (object with id/nome)
+ */
+function extractModalidade(
+  tipoContrato: string | { id: number; nome: string } | null | undefined
+): string | null {
+  if (!tipoContrato) return null;
+  if (typeof tipoContrato === "string") return tipoContrato;
+  if (typeof tipoContrato === "object" && "nome" in tipoContrato) {
+    return tipoContrato.nome;
+  }
+  return null;
+}
+
+/**
  * Normalizes a single contract from PNCP format to internal format
  */
 export function normalizeContract(
@@ -62,7 +77,7 @@ export function normalizeContract(
     startDate: parseDate(raw.dataVigenciaInicio),
     endDate: parseDate(raw.dataVigenciaFim),
     publicationDate: parseDate(raw.dataPublicacaoPncp),
-    modalidade: raw.tipoContrato || null,
+    modalidade: extractModalidade(raw.tipoContrato),
     agency: {
       code: raw.unidadeOrgao.codigoUnidade || raw.orgaoEntidade.cnpj,
       name: raw.unidadeOrgao.nomeUnidade || raw.orgaoEntidade.razaoSocial,

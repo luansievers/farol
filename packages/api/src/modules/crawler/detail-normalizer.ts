@@ -33,6 +33,21 @@ function normalizeCnpj(cnpj: string): string {
 }
 
 /**
+ * Extracts modalidade string from tipoContrato field
+ * Handles both old format (string) and new format (object with id/nome)
+ */
+function extractModalidade(
+  tipoContrato: string | { id: number; nome: string } | null | undefined
+): string | null {
+  if (!tipoContrato) return null;
+  if (typeof tipoContrato === "string") return tipoContrato;
+  if (typeof tipoContrato === "object" && "nome" in tipoContrato) {
+    return tipoContrato.nome;
+  }
+  return null;
+}
+
+/**
  * Normalizes a contract file
  */
 function normalizeFile(file: PncpContractFile): NormalizedContractFile {
@@ -86,7 +101,7 @@ export function normalizeContractDetail(
     startDate: parseDate(raw.dataVigenciaInicio),
     endDate: parseDate(raw.dataVigenciaFim),
     publicationDate: parseDate(raw.dataPublicacaoPncp),
-    modalidade: raw.tipoContrato || null,
+    modalidade: extractModalidade(raw.tipoContrato),
     category: raw.categoriaProcesso || null,
     process: raw.processo || null,
     agency: {
