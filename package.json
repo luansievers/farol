@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "pnpm@10.24.0",
   "scripts": {
-    "dev": "pnpm --filter @farol/api dev",
+    "dev": "pnpm --filter @farol/api api:dev",
     "dev:web": "pnpm --filter @farol/web dev",
     "dev:all": "pnpm --parallel --filter './packages/*' dev",
     "build": "pnpm --filter @farol/shared build && pnpm --filter './packages/*' build",
