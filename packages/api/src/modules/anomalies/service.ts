@@ -246,12 +246,12 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
     let reason: string;
     if (isAnomaly) {
       const percentFormatted = Math.round(percentageAboveMean);
-      const yearInfo = stats.year ? ` in ${String(stats.year)}` : "";
-      reason = `Value ${String(percentFormatted)}% above average of similar contracts${yearInfo} (${String(stats.contractCount)} contracts, ${deviationsFromMean.toFixed(1)} std deviations)`;
+      const yearInfo = stats.year ? ` em ${String(stats.year)}` : "";
+      reason = `Valor ${String(percentFormatted)}% acima da média de contratos similares${yearInfo} (${String(stats.contractCount)} contratos, ${deviationsFromMean.toFixed(1)} desvios padrão)`;
     } else if (deviationsFromMean > 1) {
-      reason = `Value above average but within normal range (${deviationsFromMean.toFixed(1)} std deviations)`;
+      reason = `Valor acima da média mas dentro da faixa normal (${deviationsFromMean.toFixed(1)} desvios padrão)`;
     } else {
-      reason = `Value within normal range for ${contract.category} contracts`;
+      reason = `Valor dentro da faixa normal para contratos de ${contract.category}`;
     }
 
     return {
@@ -791,20 +791,20 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
 
       if (isCountAnomaly) {
         parts.push(
-          `${String(amendmentCount)} amendments (category average: ${categoryStats.mean.toFixed(1)})`
+          `${String(amendmentCount)} aditivos (média da categoria: ${categoryStats.mean.toFixed(1)})`
         );
       }
 
       if (isValueAnomaly) {
         const percentFormatted = Math.round(valueIncreaseRatio * 100);
-        parts.push(`${String(percentFormatted)}% value change via amendments`);
+        parts.push(`${String(percentFormatted)}% de alteração de valor via aditivos`);
       }
 
       reason = parts.join("; ");
     } else if (amendmentCount > 0) {
-      reason = `${String(amendmentCount)} amendments within normal range for ${contract.category} (average: ${categoryStats.mean.toFixed(1)})`;
+      reason = `${String(amendmentCount)} aditivos dentro da faixa normal para ${contract.category} (média: ${categoryStats.mean.toFixed(1)})`;
     } else {
-      reason = `No amendments`;
+      reason = `Sem aditivos`;
     }
 
     return {
@@ -1320,24 +1320,24 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
 
       if (isContractCountAnomaly) {
         parts.push(
-          `Supplier ${stats.supplierName} has ${String(percentByCount)}% of contracts from ${stats.agencyName}`
+          `Fornecedor ${stats.supplierName} tem ${String(percentByCount)}% dos contratos de ${stats.agencyName}`
         );
       }
 
       if (isValueAnomaly && !isContractCountAnomaly) {
         // Only mention value if count wasn't already flagged
         parts.push(
-          `Supplier ${stats.supplierName} has ${String(percentByValue)}% of contract value from ${stats.agencyName}`
+          `Fornecedor ${stats.supplierName} tem ${String(percentByValue)}% do valor de contratos de ${stats.agencyName}`
         );
       } else if (isValueAnomaly && isContractCountAnomaly && parts[0]) {
         // Add value info as additional context
-        parts[0] = `${parts[0]} (${String(percentByValue)}% by value)`;
+        parts[0] = `${parts[0]} (${String(percentByValue)}% do valor)`;
       }
 
       reason = parts.join("; ");
     } else {
       const percentByCount = Math.round(stats.contractPercentage * 100);
-      reason = `Supplier has ${String(percentByCount)}% of agency contracts (within normal range)`;
+      reason = `Fornecedor tem ${String(percentByCount)}% dos contratos do órgão (dentro da faixa normal)`;
     }
 
     return {
@@ -1868,14 +1868,14 @@ export function createAnomalyService(config: Partial<AnomalyConfig> = {}) {
 
     if (isAnomaly) {
       if (isTooShort) {
-        reason = `Duration of ${String(contractDuration)} days for ${contract.category}, average is ${String(meanDays)} days (${Math.abs(deviationsFromMean).toFixed(1)} std deviations below)`;
+        reason = `Duração de ${String(contractDuration)} dias para ${contract.category}, média é ${String(meanDays)} dias (${Math.abs(deviationsFromMean).toFixed(1)} desvios padrão abaixo)`;
       } else {
-        reason = `Duration of ${String(contractDuration)} days for ${contract.category}, average is ${String(meanDays)} days (${deviationsFromMean.toFixed(1)} std deviations above)`;
+        reason = `Duração de ${String(contractDuration)} dias para ${contract.category}, média é ${String(meanDays)} dias (${deviationsFromMean.toFixed(1)} desvios padrão acima)`;
       }
     } else if (Math.abs(deviationsFromMean) > 1) {
-      reason = `Duration above/below average but within normal range (${Math.abs(deviationsFromMean).toFixed(1)} std deviations)`;
+      reason = `Duração acima/abaixo da média mas dentro da faixa normal (${Math.abs(deviationsFromMean).toFixed(1)} desvios padrão)`;
     } else {
-      reason = `Duration within normal range for ${contract.category} contracts (${String(contractDuration)} days, avg: ${String(meanDays)} days)`;
+      reason = `Duração dentro da faixa normal para contratos de ${contract.category} (${String(contractDuration)} dias, média: ${String(meanDays)} dias)`;
     }
 
     return {
