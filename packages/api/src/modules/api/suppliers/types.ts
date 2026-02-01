@@ -13,7 +13,11 @@ export interface SupplierFilters {
 }
 
 // Sort options for suppliers
-export type SupplierSortField = "tradeName" | "totalContracts" | "totalValue";
+export type SupplierSortField =
+  | "tradeName"
+  | "totalContracts"
+  | "totalValue"
+  | "averageScore";
 export type SortOrder = "asc" | "desc";
 
 export interface SupplierSortOptions {

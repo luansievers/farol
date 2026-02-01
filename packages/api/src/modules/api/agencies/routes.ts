@@ -261,10 +261,11 @@ const ListAgenciesQuerySchema = z.object({
     example: "saude",
   }),
   sortBy: z
-    .enum(["name", "totalContracts", "totalValue"])
+    .enum(["name", "totalContracts", "totalValue", "averageScore"])
     .default("name")
     .openapi({
-      description: "Sort field: name (default), totalContracts, or totalValue",
+      description:
+        "Sort field: name (default), totalContracts, totalValue, or averageScore",
       example: "totalValue",
     }),
   order: z.enum(["asc", "desc"]).default("asc").openapi({

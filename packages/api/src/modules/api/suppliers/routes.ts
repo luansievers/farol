@@ -260,11 +260,11 @@ const ListSuppliersQuerySchema = z.object({
     example: "tech",
   }),
   sortBy: z
-    .enum(["tradeName", "totalContracts", "totalValue"])
+    .enum(["tradeName", "totalContracts", "totalValue", "averageScore"])
     .default("tradeName")
     .openapi({
       description:
-        "Sort field: tradeName (default), totalContracts, or totalValue",
+        "Sort field: tradeName (default), totalContracts, totalValue, or averageScore",
       example: "totalValue",
     }),
   order: z.enum(["asc", "desc"]).default("asc").openapi({

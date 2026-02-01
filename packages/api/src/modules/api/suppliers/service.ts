@@ -264,6 +264,12 @@ export function createSupplierService(): SupplierService {
               ? a.metrics.totalValue - b.metrics.totalValue
               : b.metrics.totalValue - a.metrics.totalValue
           );
+        } else if (sort?.field === "averageScore") {
+          data.sort((a, b) => {
+            const scoreA = a.metrics.averageScore ?? -1;
+            const scoreB = b.metrics.averageScore ?? -1;
+            return sort.order === "asc" ? scoreA - scoreB : scoreB - scoreA;
+          });
         }
 
         return {

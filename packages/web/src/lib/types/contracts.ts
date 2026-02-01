@@ -183,6 +183,30 @@ export interface ContractFilters {
 export type ContractSortField = "signatureDate" | "value" | "totalScore";
 export type SortOrder = "asc" | "desc";
 
+// Supplier sort fields
+export type SupplierSortField = "tradeName" | "totalContracts" | "totalValue" | "averageScore";
+
+// Agency sort fields
+export type AgencySortField = "name" | "totalContracts" | "totalValue" | "averageScore";
+
+// Supplier list item for index page
+export interface SupplierListItemDto {
+  id: string;
+  cnpj: string;
+  tradeName: string;
+  legalName: string;
+  metrics: SupplierMetricsDto;
+}
+
+// Agency list item for index page
+export interface AgencyListItemDto {
+  id: string;
+  code: string;
+  name: string;
+  acronym: string | null;
+  metrics: AgencyMetricsDto;
+}
+
 export interface ContractListParams extends ContractFilters {
   page?: number;
   pageSize?: number;

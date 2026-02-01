@@ -13,7 +13,11 @@ export interface AgencyFilters {
 }
 
 // Sort options for agencies
-export type AgencySortField = "name" | "totalContracts" | "totalValue";
+export type AgencySortField =
+  | "name"
+  | "totalContracts"
+  | "totalValue"
+  | "averageScore";
 export type SortOrder = "asc" | "desc";
 
 export interface AgencySortOptions {

@@ -23,6 +23,18 @@ export function Header() {
             >
               Contratos
             </Link>
+            <Link
+              to="/fornecedores"
+              className="text-foreground/60 transition-colors hover:text-foreground/80 [&.active]:text-foreground"
+            >
+              Fornecedores
+            </Link>
+            <Link
+              to="/orgaos"
+              className="text-foreground/60 transition-colors hover:text-foreground/80 [&.active]:text-foreground"
+            >
+              Orgaos
+            </Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
