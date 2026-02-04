@@ -2,6 +2,8 @@
 
 ### Civic Infrastructure for Public Contract Analysis
 
+🌐 **Read in:** [English](README.md) | [Português](README.pt-BR.md)
+
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![Node.js >= 20](https://img.shields.io/badge/node-20+-green)](package.json)
 [![TypeScript](https://img.shields.io/badge/typescript-5.9-blue)](tsconfig.json)
