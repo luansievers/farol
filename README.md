@@ -83,7 +83,7 @@ Open API for programmatic access to all contract data, summaries, and analytics.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/seu-usuario/farol.git
+   git clone https://github.com/luansievers/farol.git
    cd farol
    ```
 
@@ -622,6 +622,6 @@ Full dependency licenses in `node_modules/*/LICENSE`.
 
 **Built with ❤️ for transparency and civic participation**
 
-[Report Bug](https://github.com/seu-usuario/farol/issues) · [Request Feature](https://github.com/seu-usuario/farol/issues) · [Contribute](CONTRIBUTING.md)
+[Report Bug](https://github.com/luansievers/farol/issues) · [Request Feature](https://github.com/luansievers/farol/issues) · [Contribute](CONTRIBUTING.md)
 
 </div>
